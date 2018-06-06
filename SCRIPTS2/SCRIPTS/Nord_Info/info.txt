@@ -1,0 +1,46 @@
+Medias
+\\nord\dr\Software\SQLServer
+
+
+
+Database Engine Services
+SQL replication
+
+Client tolls conectivity
+Integrations ervices
+managment tools basic and complete
+
+
+
+Group  
+NORD\DRM_SQLServer 
+
+Install
+D:\Program Files\
+
+
+dbs
+E:\SQLServr\Data\
+F:\SQLServr\Log\
+
+Backups
+H:\SQLBkup\SQLDump\
+
+Tempdb:
+G:\SQLServr\Data\
+G:\SQLServr\Log\
+
+--------------
+SQL 2012 Enterprise edition.
+No need for HA
+
+
+
+
+Restoredb 'dbrefrescar', 'backup.'
+
+ent para prod y dev test y dev
+
+
+
+---1897750  -- ojo cambia el owner

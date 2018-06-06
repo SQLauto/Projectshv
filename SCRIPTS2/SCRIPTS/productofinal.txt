@@ -1,0 +1,125 @@
+DECLARE @database_name as varchar(190)
+DECLARE @database_Direction as varchar(590)
+DECLARE @IM as varchar(190)
+----------------------------------------------------
+----------------------------------------------------
+----------------------------------------------------
+
+
+Set @database_name='DB_ARC_IMPORT'
+Set @IM='IM123421'
+
+
+----------------------------------------------------
+----------------------------------------------------
+----------------------------------------------------
+
+
+Set @database_Direction= (Select top (1) physical_device_name  
+    from msdb..backupset backupset left join msdb..backupmediafamily backupmediafamily On 
+    backupmediafamily.media_set_id = backupset.media_set_id 
+    where type in ('D') and database_name =@database_name
+    oRDER BY 1 DESC)
+
+
+
+
+
+
+
+declare @Direction_final varchar (max)
+set @Direction_final= REVERSE (@database_Direction)
+
+Set @Direction_final = (Select REVERSE(SUBSTRING(@Direction_final, 
+CHARINDEX('\', @Direction_final)+1, LEN(@Direction_final)))) +'\'+@database_name+'_Previous_'+ @IM +'.bkp'
+--Select @Direction_final
+
+
+
+--select @database_Direction
+			
+
+
+
+
+select system_user +'  --  '+ USer_name() +'  --  '+@@SERVERNAME as [User\Permission\Server]
+
+
+select 'exec master.dbo.xp_backup_database @database='''+@database_name+''',
+@filename='''+@Direction_final+'''' as backup_Litespeed
+
+Select 'BACKUP DATABASE ['+ @database_name +'] 
+TO  DISK = N'''+@Direction_final+''' 
+WITH  COPY_ONLY,
+  NAME = N'''+@database_name+'-Full Database Backup previous_'+@IM+', 
+  STATS = 1
+GO'as backups_SQL
+
+
+
+
+Select  Round (Sum((cast (size as float)*8)/1024), 2) 	SizeMB  ,
+Round (Sum((cast (size as float)*8)/1024)*0.000976, 2)  SizeGB  , 
+ Round (Sum((cast (size as float) *8)/1024)*0.000976  /1024, 2) 
+ SizeTB,@database_name as DB_Name
+ 
+ FROM sys.master_files 
+ WHERE DB_NAME(database_id) =@database_name
+
+
+
+
+
+  Select	backup_start_date,backup_finish_date,database_name, physical_device_name,
+   type, backup_size as backup_size, [user_name],database_creation_date,backupset.media_set_id
+    from msdb..backupset backupset left join msdb..backupmediafamily backupmediafamily On 
+    backupmediafamily.media_set_id = backupset.media_set_id 
+    where type in ('D') and database_name =@database_name
+    oRDER BY 1 DESC
+
+
+
+CREATE TABLE #DF_Result (Drive CHAR(1), MBFree INT  ) 
+INSERT  INTO #DF_Result EXEC master..xp_fixeddrives ALTER TABLE #DF_Result
+ ADD GBFree Float  NULL, TBFree Float Null Update #DF_Result sET GBFree=MBFree*0.000976 
+  Update #DF_Result sET TBFree=GBFree*0.000976  Select Drive,MBFree,Round(GBFree, 2) as GBFree ,
+   Round(TBFree,2) as TBFree from #DF_Result  order by 2 desc drop table #DF_Result
+
+
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DbFilesInventory') )
+	drop table ##DbFilesInventory
+
+Create table ##DbFilesInventory (DbName sysname, DBFileId int, LogicalName sysname, physical_name varchar(500), sizeMB float, usedMB float)
+
+exec sp_msforeachdb 'USE [?];
+insert into ##DbFilesInventory
+SELECT DB_NAME(database_id),
+s.file_id AS [ID],
+s.name AS [Name],
+s.physical_name AS [FileName],
+Round(s.size /128.0,2) AS [SizeMB],
+Round(CAST(FILEPROPERTY(s.name, ''SpaceUsed'') AS float)/128.0,2) AS [UsedSpace]
+FROM sys.master_files AS s 
+WHERE s.database_id = db_id()
+ORDER BY [ID] ASC' 
+
+
+Select *,sizeMB-usedMB as [FreeMB] , 
+FreeGBs = Round((sizeMB-usedMB) / 1024.0,2),
+Round(((sizeMB-usedMB) /  SizeMB) * 100,2) as [Pct Free]  --usedMB                 
+, +Char(13)+'Use [' +DbName+']
+Go '+Char(13)+'DBCC SHRINKFILE (N'''+LogicalName+''',0,TRUNCATEONLY)'+Char(13)+' 
+GO '+Char(13)+Char(13)+Char(13) as Sentence  from ##DbFilesInventory 
+Where dbname  Like '%'+@database_name+'%'
+--where physical_name like 'J:%'
+Order by [FreeMB]desc
+
+
+--//or
+
+Select  'Use [' +DbName+'] 
+Go '+Char(13)+'DBCC SHRINKFILE (N'''+LogicalName+''',0,TRUNCATEONLY)'+Char(13)+'GO'+Char(13)
+as Sentence  from ##DbFilesInventory
+Where dbname  Like '%'+@database_name+'%'
+--where physical_name like 'J:%'

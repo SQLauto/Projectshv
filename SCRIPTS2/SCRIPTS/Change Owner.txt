@@ -1,0 +1,7 @@
+sp_changedbowner 'sa'
+Use [wslogdb55_200705052130]
+gO
+
+
+
+sp_who2 active

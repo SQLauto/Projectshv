@@ -1,0 +1,21 @@
+select * from master..sysprocesses
+where kpid >0
+
+
+dbcc inputbuffer (106)
+
+---
+
+
+exec sp_executeSQL N'declare @sql_handle as binary(20)
+			     declare @stmt_start as int, @stmt_end as int
+
+				SELECT	@sql_handle = sql_handle,
+					@stmt_start = stmt_start/2,
+					@stmt_end = CASE WHEN stmt_end = -1 THEN -1 ELSE stmt_end/2 END
+				FROM master.dbo.sysprocesses
+				WHERE	spid = @SPID AND ecid = 0
+
+
+				Select @Spid Spid, SUBSTRING(text,COALESCE(NULLIF(@stmt_start, 0), 1), CASE @stmt_end  WHEN -1 THEN DATALENGTH(text) ELSE (@stmt_end - @stmt_start) END) LineExec,* FROM ::fn_get_sql(@sql_handle) 
+				select @Spid SPID   DBCC INPUTBUFFER(@Spid) ' ,N'@Spid as smallint', @Spid= @Spid1

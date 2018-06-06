@@ -1,0 +1,30 @@
+Check AG preferred replica
+
+
+
+
+DECLARE @dbname sysname
+SET @dbname = 'corp'
+DECLARE @cmd varchar(1024)
+
+If sys.fn_hadr_backup_is_preferred_replica( @dbname ) = 0 
+BEGIN
+	Print 'This is not the preferred replica for backups. No backup will be taken'
+	RAISERROR (N'Check the preferred backup replica for current backup status.', -- Message text.
+			   18, -- Severity,
+			   1 ); -- State
+END
+
+
+
+
+
+
+
+
+D:\Util\Log\FULLDBBK.log
+
+
+--
+ALTER AUTHORIZATION ON ENDPOINT::hadr_endpoint TO [nord\DB_DBEPMTSQL08_SQL]
+GO

@@ -1,0 +1,132 @@
+--========================================================================================================================================================
+--	DESCRIPTION:
+--		This script generates script for creating database USERS, DB ROLES and APP ROLES for SQL SERVER 2005 and ABOVE
+--		Generates script for adding USERS and ROLES to DB FIXED ROLES
+--		Generates script for OBJECT LEVEL permissions
+--		Generates script for DATABASE LEVEL permissions
+--		Generates script for COLUMN LEVEL permissions
+--		Please set the database name in "USE []" statement below
+--
+
+--========================================================================================================================================================
+
+USE []
+GO
+----------------------------------------------------
+----DB ACCESS AND ADDING TO ROLES TO USERS-----
+----------------------------------------------------
+PRINT '/**********************************************************************************************************************************/'
+PRINT '/***THE APPLICATION ROLES HAS BEEN SCRIPTED WITH P/W AS ''xxxxxxxx'' BY DEFAULT; HENCE, SET THE CORRESPONDING P/W BEFORE RUNNING THE SCRIPT***/'
+PRINT '/**********************************************************************************************************************************/'
++CHAR(10)+CHAR(10)
+
+SET NOCOUNT ON
+
+SELECT 'USE '+DB_NAME(dbid)+CHAR(10)+'GO' FROM master..sysprocesses WHERE spid=@@SPID
+
+-------------------------------------------
+--***GRANTING DB ACCESS TO USERS***--
+-------------------------------------------
+SELECT 'IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='''+U.name+''')'
++CHAR(10)+'CREATE USER '+QUOTENAME(U.name)+' FOR LOGIN '+QUOTENAME(L.name COLLATE DATABASE_DEFAULT)
++	CASE U.type_desc
+		WHEN 'WINDOWS_USER' THEN ' WITH DEFAULT_SCHEMA = '+QUOTENAME(U.default_schema_name)+';'
+		WHEN 'SQL_USER' THEN ' WITH DEFAULT_SCHEMA = '+QUOTENAME(U.default_schema_name)+';'
+		WHEN 'WINDOWS_GROUP' THEN ';'
+	END AS [-----GRANTING DB ACCESS TO USERS-----]
+FROM sys.database_principals U
+LEFT JOIN master.sys.server_principals L ON U.sid = L.sid
+WHERE U.principal_id > 4 AND U.type_desc in ('SQL_USER','WINDOWS_USER','WINDOWS_GROUP') AND L.sid IS NOT NULL
+GO
+
+-----------------------------------
+----***CREATING DB ROLES***----
+-----------------------------------
+SELECT 'IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='''+name+''')' +CHAR(10)
+	+CASE type_desc
+		WHEN 'DATABASE_ROLE' THEN 'CREATE ROLE '+QUOTENAME(name)+' AUTHORIZATION '+QUOTENAME(USER_NAME(owning_principal_id))
+		WHEN 'APPLICATION_ROLE' THEN 'CREATE APPLICATION ROLE '+QUOTENAME(name)+' WITH PASSWORD = ''xxxxxxxx'', DEFAULT_SCHEMA = '+QUOTENAME(default_schema_name)
+	END AS [-----CREATING DB ROLES-----]
+FROM sys.database_principals
+WHERE name != 'public' AND type_desc IN ('DATABASE_ROLE','APPLICATION_ROLE') AND is_fixed_role <> 1
+
+
+--***ADDING USERS TO DB ROLES***--
+SELECT 'EXEC sp_addrolemember '''+USER_NAME(role_principal_id)+''','''+USER_NAME(member_principal_id)+'''' AS [-----ADDING USERS TO DB ROLES-----] 
+FROM sys.database_role_members 
+WHERE USER_NAME(member_principal_id) != 'dbo'
+GO
+
+
+
+-----------------------------------
+--CREATE / BACKUP PERMISSIONS---
+-----------------------------------
+SELECT CASE state_desc
+			WHEN 'DENY' THEN 'DENY '
+			WHEN 'REVOKE' THEN 'REVOKE '
+			WHEN 'GRANT' THEN 'GRANT '
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN 'GRANT '
+		END
++ permission_name + ' TO '+ QUOTENAME(USER_NAME(grantee_principal_id))
++	CASE state_desc
+			WHEN 'DENY' THEN ';'
+			WHEN 'REVOKE' THEN ';'
+			WHEN 'GRANT' THEN ';'
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN ' WITH GRANT OPTION;'
+	END AS [--CREATE / BACKUP PERMISSIONS---]
+FROM sys.database_permissions
+WHERE USER_NAME(grantee_principal_id) NOT IN ('dbo','INFORMATION_SCHEMA','sys') AND OBJECT_NAME(major_id) IS NULL AND minor_id=0
+GO
+
+-----------------------------------
+----OBJECT LEVEL PERMISSIONS----
+-----------------------------------
+SELECT CASE P.state_desc
+			WHEN 'DENY' THEN 'DENY '
+			WHEN 'REVOKE' THEN 'REVOKE '
+			WHEN 'GRANT' THEN 'GRANT '
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN 'GRANT '
+		END
++ P.permission_name + ' ON ' +QUOTENAME(Schema_Name(O.schema_id))  COLLATE DATABASE_DEFAULT+'.'+QUOTENAME(OBJECT_NAME(P.major_id))  COLLATE DATABASE_DEFAULT
++ ' TO '+QUOTENAME(USER_NAME(P.grantee_principal_id)) COLLATE DATABASE_DEFAULT
++	CASE P.state_desc
+			WHEN 'DENY' THEN ';'
+			WHEN 'REVOKE' THEN ';'
+			WHEN 'GRANT' THEN ';'
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN ' WITH GRANT OPTION;'
+	END AS [----OBJECT LEVEL PERMISSIONS----]
+FROM sys.database_permissions P
+JOIN sys.objects O on O.object_id=P.major_id
+WHERE P.major_id > 0 			--eliminating systemobjects
+AND P.minor_id=0				--elininating column level permissions
+GO
+
+-----------------------------------
+----COLUMN LEVEL PERMISSIONS----
+-----------------------------------
+SELECT CASE P.state_desc
+			WHEN 'DENY' THEN 'DENY '
+			WHEN 'REVOKE' THEN 'REVOKE '
+			WHEN 'GRANT' THEN 'GRANT '
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN 'GRANT '
+		END
++ P.permission_name + ' ON ' +QUOTENAME(Schema_Name(O.schema_id)) COLLATE DATABASE_DEFAULT+'.'+QUOTENAME(OBJECT_NAME(P.major_id)) COLLATE DATABASE_DEFAULT
++'('+COL_NAME(P.major_id,P.minor_id)+')'
++ ' TO '+QUOTENAME(USER_NAME(P.grantee_principal_id)) COLLATE DATABASE_DEFAULT
++	CASE P.state_desc
+			WHEN 'DENY' THEN ';'
+			WHEN 'REVOKE' THEN ';'
+			WHEN 'GRANT' THEN ';'
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN ' WITH GRANT OPTION;'
+	END AS [----COLUMN LEVEL PERMISSIONS----]
+FROM sys.database_permissions P
+JOIN sys.objects O on O.object_id=P.major_id
+WHERE P.minor_id > 0
+GO
+
+
+SET NOCOUNT OFF
+
+go 
+use master

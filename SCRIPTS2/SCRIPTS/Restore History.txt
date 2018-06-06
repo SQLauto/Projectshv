@@ -1,0 +1,14 @@
+Use msdb 
+select * from backupset where backup_set_id in (
+	select top 1 backup_set_id 
+	from restorehistory 
+	where destination_database_name = 'GMSD' 
+order by backup_set_id desc
+................
+
+
+
+SELECT destination_database_name, MAX(restore_date)
+FROM msdb.dbo.restorehistory
+WHERE destination_database_name  IN ('RPTT','VOLT','EDXT','GMSGT','PFSGT','DEFGT','WMCGT','REGGT','GMST','PFST','DEFT','WMCT','REGT')
+GROUP BY destination_database_name

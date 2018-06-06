@@ -1,0 +1,19 @@
+
+select 
+'Victim' as Blocker_type,Status,spid, Blocked,'Dbid: '+cast (dbid as varchar (20))+' - '+DB_NAME(dbid) as DBName, ('select '''+ Ltrim(str( spid, 5 )  )) +''' Event_Info'as SPID_Eventinfo,'Dbcc Inputbuffer ('+Ltrim(str( spid, 5 )  )+')' as Input_Spid,   
+'Kill  '+Ltrim(str( spid, 5 )  )+' ' as [kill_Spid] , open_tran, hostname,   Program_name,cmd, loginame , login_time, last_batch      
+from sys.sysprocesses
+where blocked <> 0
+
+union
+select 
+'Blocker' as Blocker_type,Status,spid, Blocked,'Dbid: '+cast (dbid as varchar (20))+' - '+DB_NAME(dbid) as DBName, ('select '''+ Ltrim(str( spid, 5 )  )) +'''Event_Info'as SPID_Eventinfo,'Dbcc Inputbuffer ('+Ltrim(str( spid, 5 )  )+')' as Input_Spid,   
+ 'Kill  '+Ltrim(str( spid, 5 )  )+' ' as [kill_Spid] , open_tran, hostname,   Program_name,cmd, loginame , login_time, last_batch      
+from sys.sysprocesses
+where blocked =0 and spid in (select blocked from sys.sysprocesses where blocked <> 0) Order by 1 
+select   Status,count(Status) As count  from sys.sysprocesses where spid >51 GROUP by Status Order by 2 desc
+select   Count(Status) As Count  from sys.sysprocesses where spid >51
+select 
+Status,spid, Blocked,'Dbid: '+cast (dbid as varchar (20))+' - '+DB_NAME(dbid) as DBName, ('select '''+ Ltrim(str( spid, 5 )  )) +''' Event_Info'as SPID_Eventinfo,'Dbcc Inputbuffer ('+Ltrim(str( spid, 5 )  )+')' as Input_Spid,   
+'Kill  '+Ltrim(str( spid, 5 )  )+' ' as [kill_Spid] , open_tran, hostname,   Program_name,cmd, loginame , login_time, last_batch      /**/from sys.sysprocesses
+where spid >51 order by spid

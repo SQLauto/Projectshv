@@ -1,0 +1,175 @@
+Declare @Sizedb as Int,
+		@Command as Varchar (3000),
+		@Command2 as Varchar (3000),
+		@Datafile as Varchar (3000),
+		@DBName as Varchar (3000),
+		@Chunks  As int,
+		@Initial As int,
+		@StopAt As int,
+		@Pass As int
+		Set @pass =0
+/*****************************************
+  ---- Size & params for the database
+******************************************/
+--set the Initial size of the db and when to stop
+set @Initial =1000
+set @StopAt=0
+--set the small chunks to shrink the db -64
+set @Chunks=64
+--set the db data
+set @DBName='DBName'
+set @Datafile='Datafile'
+/*****************************************/
+
+
+set @Command2=
+'Use ['+@DBName+']
+Go
+'
+print @Command2
+--when you stop the shrunk
+set @StopAt=@StopAt+@Chunks
+WHILE @Initial>=@StopAt
+
+Begin
+
+set @pass= @pass+1
+Set @Sizedb=@Initial-@Chunks
+-- command
+Set @Command='----------------Row# '+cast (@pass as Varchar(30))+'----------------
+DBCC SHRINKFILE (N'''+@Datafile+''' ,'+cast (@Sizedb as Varchar(30))+')
+GO 
+Select ''Row #'+  cast (@pass as Varchar(30))+''' as Row#
+
+'
+
+set @Initial =@Sizedb
+
+	if @Sizedb =@StopAt--like '%-%' 
+	PRINT ''
+	Else
+	PRINT(@Command)
+	--Exec (@Command)
+	
+
+end
+
+/*
+
+
+
+/*
+CREATE TABLE dbo.Table_For_Shrink
+	(
+	Step_id varchar(500) NULL,
+	Date_time datetime NULL
+	)  ON [PRIMARY]
+GO
+drop table Table_For_Shrink*/
+
+
+
+
+
+
+Declare @Sizedb as Int,
+		@Command as Varchar (3000),
+		@Command2 as Varchar (3000),
+		@Datafile as Varchar (3000),
+		@DBName as Varchar (3000),
+		@Chunks  As int,
+		@Initial As int,
+		@StopAt As int,
+		@Pass As int
+		Set @pass =0
+/*****************************************
+  ---- Size & params for the database
+******************************************/
+--set the Initial size of the db and when to stop
+set @Initial =180232
+set @StopAt=2000
+--set the small chunks to shrink the db -64
+set @Chunks=64
+--set the db data
+set @DBName='OPTIB_ErrorJournal'
+set @Datafile='OPTIB_ErrorJournal'
+/*****************************************/
+
+
+set @Command2=
+'Use ['+@DBName+']
+Go
+'
+print @Command2
+--when you stop the shrunk
+set @StopAt=@StopAt+@Chunks
+WHILE @Initial>=@StopAt
+
+Begin
+
+set @pass= @pass+1
+Set @Sizedb=@Initial-@Chunks
+-- command
+Set @Command='----------------Row# '+cast (@pass as Varchar(30))+'----------------
+DBCC SHRINKFILE (N'''+@Datafile+''' ,'+cast (@Sizedb as Varchar(30))+')
+GO 
+Select ''Row #'+  cast (@pass as Varchar(30))+''' as Row#
+
+
+GO
+
+INSERT INTO [dbo].[Table_For_Shrink]
+           ([Step_id]
+           ,[Date_time])
+     VALUES
+           (''Row #'+  cast (@pass as Varchar(30))+''' ,Getdate())
+GO
+
+
+
+'
+
+set @Initial =@Sizedb
+
+	if @Sizedb =@StopAt--like '%-%' 
+	PRINT ''
+	Else
+	PRINT(@Command)
+	--Exec (@Command)
+	
+
+end
+
+
+
+
+*/
+
+
+
+\\\\\\\\\\\\\ejemplo\\\\\\\\\\\\\\\\\\\\\\\\
+
+-------------------------------
+
+
+----------------Pass# 1----------------
+USe [Kiwi]
+DBCC SHRINKFILE (N'Kiwi' ,19936)
+GO
+Select 1 as Pass#
+----------------Pass# 2----------------
+USe [Kiwi]
+DBCC SHRINKFILE (N'Kiwi' ,19872)
+GO
+Select 2 as Pass#
+----------------Pass# 3----------------
+USe [Kiwi]
+DBCC SHRINKFILE (N'Kiwi' ,19808)
+GO
+Select 3 as Pass#
+----------------Pass# 4----------------
+USe [Kiwi]
+DBCC SHRINKFILE (N'Kiwi' ,19744)
+GO
+Select 4 as Pass#
+----------------Pass# 5----------------

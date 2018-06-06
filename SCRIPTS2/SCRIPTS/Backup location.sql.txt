@@ -1,0 +1,6 @@
+
+SELECT S.database_name, S.name, S.type, S.backup_start_date, MF.logical_device_name, MF.physical_device_name 
+FROM msdb.dbo.backupset AS S
+	INNER JOIN msdb.dbo.backupmediafamily AS MF ON S.media_set_id = MF.media_set_id
+WHERE S.database_name = ''
+ORDER BY S.backup_start_date DESC

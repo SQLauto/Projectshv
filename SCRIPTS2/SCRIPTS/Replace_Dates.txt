@@ -1,0 +1,6 @@
+Declare @fechas as varchar(19)
+Set @fechas =getdate()
+Set @fechas = REPLACE(@fechas,' ','_')
+Set @fechas = REPLACE(@fechas,':','_')
+
+Select @fechas+'.bak' 

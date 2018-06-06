@@ -1,0 +1,73 @@
+xp_sqllitespeed_version
+
+
+--checar reporte
+
+exec master.dbo.xp_restore_filelistonly
+ @filename = 'H:\MSSQL\BACKUP\TEST4_Full.BKP'
+
+
+-- sql
+
+
+RESTORE HEADERONLY 
+FROM DISK = N'C:\AdventureWorks-FullBackup.bak' 
+
+
+
+--***********respaldos
+
+
+
+
+declare @database_name varchar (190)
+Declare @type varchar (10)
+--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+set @database_name='dsg_uat'  
+
+--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+Select	backup_start_date,backup_finish_date,database_name,
+		physical_device_name, type, 
+		 backup_size as backup_size, [user_name],
+		 --backup_size/1024.0/1024.0/1024.0
+		database_creation_date, 
+		backupset.media_set_id
+
+from msdb..backupset backupset left join msdb..backupmediafamily backupmediafamily
+
+On backupmediafamily.media_set_id = backupset.media_set_id
+where 
+type in ('D') and 
+database_name =@database_name
+order by backup_start_date desc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--genera Lite speed report
+
+exec master.dbo.xp_backup_database @database='PCOEOrderInquiry',
+@filename='K:\MSSQL\Backup\Full\pre-release_Nexus1169943_FADotCom_SQLLite_Full.BKP'
+
+-----------------------------------
+@filenumber = 1,
+
+@with = N'STATS = 10',
+
+@with = N'NORECOVERY',
+--@with = N'MOVE N''CASETRACKER_BAC_FileStream'' TO N''M:\MSSQL10.MSSQLSERVER\MSSQL\Data\CASETRACKER_BAC_FileStream''',
+
+@affinity = 0,
+
+@logging = 0

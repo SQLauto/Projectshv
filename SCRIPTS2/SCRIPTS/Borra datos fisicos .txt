@@ -1,0 +1,46 @@
+
+
+DECLARE @name VARCHAR(500),
+                                @Message VARCHAR(500),
+                                @checkfile INT, 
+                                @cmddel VARCHAR(500), 
+                                @Retdays TINYINT, 
+                                @Directory VARCHAR(500), 
+                                @Wildcard INT,
+                                @StartDateTime DATETIME,
+                                @Date VARCHAR(50),
+                                @Time VARCHAR(50),
+                                @StartDate VARCHAR(50),
+                                @StartTime VARCHAR(50),
+                                @Filename VARCHAR(500),
+                                @backupCmd VARCHAR(500),
+                                @results int
+
+
+SELECT @Retdays = 3,
+		@Directory = 'E:\Program Files\Microsoft SQL Server\MSSQL10.SQLEXPRESS\MSSQL\Backup'
+
+                                DECLARE @FilesToErase TABLE(Data varchar(500))
+                                SET @StartDateTime = DATEADD(D,-@retdays,GETDATE() )
+                                SET @Date =  CONVERT (varchar(30),@startDateTime,101)
+                                SET @StartDate = SUBSTRING(@Date,7,4) + SUBSTRING(@Date,1,2) + SUBSTRING(@Date,4,2) 
+                                SET @backupCmd = 'DIR ' + @Directory + '*.bak'
+                                INSERT @FilesToErase
+                                EXEC master..xp_cmdshell @backupCmd
+                                UPDATE @FilesToErase SET Data = LTRIM(RIGHT(Data, LEN(Data)- (LEN(Data) - CHARINDEX(SPACE(1),REVERSE(Data),0))))
+                                DELETE @FilesToErase WHERE Data NOT LIKE '%.bak' OR LEN(Data)<18 OR Data IS NULL
+                                DECLARE FL_Cursor CURSOR FOR
+                                                SELECT Data FROM @FilesToErase
+                                                WHERE LEFT(RIGHT(Data,LEN(Data)-CHARINDEX('.',Data)),8) < @StartDate
+                     OPEN FL_Cursor
+                    FETCH NEXT FROM FL_Cursor INTO @name
+                                WHILE @@FETCH_STATUS = 0
+                                                BEGIN
+                                                                SET @backupCmd = 'DEL ' + @Directory + @Name + ' /f/q'
+                                                                EXEC master..xp_cmdshell @backupCmd
+                                                                FETCH NEXT FROM FL_Cursor INTO @name
+                                                END
+                    CLOSE FL_Cursor
+                    DEALLOCATE FL_Cursor
+                                
+                                    

@@ -1,0 +1,5 @@
+Supported Memory Cards MultiMediaCard,
+SD Memory Card,
+xD-Picture Card Type M,
+xD-Picture Card,
+xD-Picture Card Type H 

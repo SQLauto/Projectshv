@@ -1,0 +1,69 @@
+
+
+checkpoint
+
+DBCC FREESYSTEMCACHE ('ALL')
+
+DBCC FREEPROCCACHE
+---------------- shrink base
+USE [tempdb]
+GO
+DBCC SHRINKDATABASE(N'tempdb' )
+GO
+
+----------------shrink files log
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'templog' , 0, TRUNCATEONLY)
+GO
+
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 200000000, TRUNCATEONLY)
+GO
+
+
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 20000000, TRUNCATEONLY)
+GO
+
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 2000000, TRUNCATEONLY)
+GO
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 200000, TRUNCATEONLY)
+GO
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 20000, TRUNCATEONLY)
+GO
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 2000, TRUNCATEONLY)
+GO
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 200, TRUNCATEONLY)
+GO
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 20, TRUNCATEONLY)
+GO
+----------------shrink files data
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'tempdev' , 0, TRUNCATEONLY)
+GO
+
+

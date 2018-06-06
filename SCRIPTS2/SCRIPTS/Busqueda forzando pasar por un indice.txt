@@ -1,0 +1,138 @@
+
+--Table
+
+
+
+CREATE TABLE #Results (
+	[state] [nvarchar] (2) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[cdc] [nvarchar] (20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[request_no] [nvarchar] (20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[seq_nmbr] [nvarchar] (10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[latitude] [float] NULL ,
+	[longitude] [float] NULL ,
+	[address] [nvarchar] (50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[intersection] [nvarchar] (100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[locator] [nvarchar] (50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[contact] [nvarchar] (75) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[phone] [nvarchar] (30) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[locateDT] [datetime] NULL ,
+	[contactDT] [datetime] NULL ,
+	[note] [ntext] COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[Line_Exposed] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[description] [ntext] COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[comments] [ntext] COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[excavation_monitored] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[incorrect_info] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[missing_info] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[line_crossing] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[buffer] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[field_visit] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[monitor_status] [varchar] (3) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[pipeline_dist] [float] NULL ,
+	[event_dt] [datetime] NOT NULL ,
+	[event] [nvarchar] (50) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[username] [nvarchar] (100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[tcktrecDT] [datetime] NULL ,
+	[prepared_DT] [datetime] NULL ,
+	[county] [nvarchar] (50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[company] [nvarchar] (100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[ticketFile] [text] COLLATE SQL_Latin1_General_CP1_CI_AS NULL ,
+	[RequestNo] [nvarchar] (20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL ,
+	[caller] [nvarchar] (50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL 
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+ALTER TABLE dbo.#Results ADD CONSTRAINT
+	PK__results PRIMARY KEY CLUSTERED 
+	(
+	request_no
+	) ON [PRIMARY]
+
+GO
+
+
+
+
+
+----- Var for pass by Index
+
+
+DECLARE @request_no NVARCHAR(40)
+
+
+SELECT @request_no = MIN(request_no) FROM dbo.Tickets
+
+WHILE @request_no IS NOT NULL
+BEGIN
+
+
+
+-- INsert to table temporal
+--insert into #Results
+
+
+--Select to insert
+SELECT --TOP 2000
+
+  Tickets.state,
+  TicketReport.cdc,
+  Tickets.request_no,
+  TicketReport.seq_nmbr,
+  TicketReport.latitude,
+  TicketReport.longitude,
+  Tickets.address,
+  Tickets.intersection,
+  TicketReport.locator,
+  Tickets.contact,
+  Tickets.phone,
+  TicketReport.locateDT,
+  TicketReport.contactDT,
+  Notes.note,
+  CASE TicketReport.line_exposed WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END as Line_Exposed,
+  TicketReport.description,
+  TicketReport.comments,
+  CASE TicketReport.excavation_monitored WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END AS excavation_monitored,
+  CASE TicketReport.incorrect_info WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END as incorrect_info,
+  CASE TicketReport.missing_info WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END AS missing_info,
+  Case TicketReport.line_crossing WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END AS line_crossing,
+  CASE TicketReport.buffer WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END AS buffer,
+  CASE TicketReport.field_visit WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END AS field_visit,
+  CASE TicketReport.monitor_status WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'N/A' END AS monitor_status,
+  TicketReport.pipeline_dist,
+  TicketAudit.event_dt,
+  TicketAudit.event,
+  TicketAudit.username,
+  Tickets.tcktrecDT,
+  Tickets.prepared_DT,
+  Tickets.county,
+  Tickets.company,
+  Tickets.ticketFile,
+  TicketReport.request_no AS RequestNo,
+  Tickets.caller
+
+FROM
+  OneCall.dbo.Tickets as Tickets
+  INNER JOIN OneCall.dbo.TicketReport as TicketReport ON (Tickets.request_no=TicketReport.request_no)
+  INNER JOIN OneCall.dbo.TicketAudit AS TicketAudit ON (TicketReport.request_no=TicketAudit.request_no)
+  INNER JOIN OneCall.dbo.Notes AS Notes ON (TicketReport.request_no=Notes.request_no)
+ 
+WHERE Tickets.request_no = @request_no
+
+
+
+SELECT @request_no = MIN(request_no) FROM dbo.Tickets WHERE request_no > @request_no
+
+
+@request_no=10
+
+END 
+
+
+--
+select * from #Results
+
+-- drop table temporal
+--#Drop table #Results
+
+
+
+

@@ -1,0 +1,43 @@
+Identifying if a System has CPU Pressure
+
+Prior to DMVs, the typical approach to checking whether a server was experiencing CPU bottlenecks was to use the Processor Queue Length performance counter.  This counter should typically be near 0 for systems not experiencing CPU pressure.
+
+This approach is still valid, but is not necessarily a good measure for a server used for SQL Server.  To see why this is the case, we must examine SQL Server Execution Model. 
+
+SQL Server uses a User Mode Scheduler (UMS) to control the execution of SQL Server user requests (SPIDs or session_ids). The UMS manages the execution of SQL Server requests (without returning control to Windows). So when SQL Server gets its time slice from the Windows scheduler, the SQL Server UMS manages what user requests are run during this time. 
+
+
+In a 4-proc scenario, there will be 4 User Mode Schedulers, one for each CPU. Each UMS uses a number of constructs (queues, lists and worker threads) to govern execution. At any given time, each UMS will have at most a single running thread, a runnable queue of requests that are 
+waiting for CPU, a waiter list (for resources such as IO, locks, memory), and a work queue (user requests that are waiting for worker threads). 
+
+Whenever the current running thread needs I/O it is moved to the wait list.  When this occurs, the next request from the runnable queue is started.  When the thread needing I/O completes, it is moved back to the end of the runnable queue.  
+
+The time waiting for a resource is shown as Resource Waits. The time waiting in the runnable queue for CPU is called Signal Waits. In SQL Server 2005, waits are shown in the Dynamic Management View (DMV), sys.dm_os_wait_stats.  In this DMV, high Signal Wait % indicates a CPU constraint.   
+
+
+The query to measure cpu pressure using sys.dm_os_wait_stats is as follows:
+
+ 
+
+SELECT     
+    sum(signal_wait_time_ms) AS signal_wait_time_ms,
+    cast(100.0 * sum(signal_wait_time_ms) / sum (wait_time_ms) as numeric(20,2)) as '%signal (cpu) waits',
+    sum(wait_time_ms - signal_wait_time_ms) as resource_wait_time_ms,
+    cast(100.0 * sum(wait_time_ms - signal_wait_time_ms) / sum (wait_time_ms) as numeric(20,2)) as '%resource waits'
+FROM 
+    sys.dm_os_wait_stats
+ 
+
+You can also monitor the SQL Server schedulers using the sys.dm_os_schedulers view to see if
+the number of runnable tasks is typically nonzero. A nonzero value indicates that tasks have to wait for their time slice to run; high values for this counter are a symptom of a CPU bottleneck. You can use the following query to list all the schedulers and look at the number of runnable tasks. 
+
+
+
+SELECT 
+    scheduler_id,
+    current_tasks_count,
+    runnable_tasks_count
+FROM
+    sys.dm_os_schedulers
+WHERE  
+    scheduler_id < 255

@@ -1,0 +1,29 @@
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DbFilesInventory') )
+	drop table ##DbFilesInventory
+
+Create table ##DbFilesInventory (DbName sysname, DBFileId int, LogicalName sysname, physical_name varchar(500), sizeMB float, usedMB float)
+
+exec sp_msforeachdb 'USE [?];
+insert into ##DbFilesInventory
+SELECT DB_NAME(database_id),
+s.file_id AS [ID],
+s.name AS [Name],
+s.physical_name AS [FileName],
+Round(s.size /128.0,2) AS [SizeMB],
+Round(CAST(FILEPROPERTY(s.name, ''SpaceUsed'') AS float)/128.0,2) AS [UsedSpace]
+FROM sys.master_files AS s 
+WHERE s.database_id = db_id()
+ORDER BY [ID] ASC' 
+
+
+Select *,sizeMB-usedMB as [FreeMB], +Char(13)+'Use [' +DbName+'] 
+Go '+Char(13)+'DBCC SHRINKFILE (N'''+LogicalName+''',0,TRUNCATEONLY)'+Char(13)+' 
+GO '+Char(13)+Char(13)+Char(13) as Sentence  from ##DbFilesInventory Order by [FreeMB]desc
+
+--//or
+
+Select  +Char(13)+'Use [' +DbName+'] 
+Go 
+'+Char(13)+'DBCC SHRINKFILE (N'''+LogicalName+''',0,TRUNCATEONLY)'+Char(13)+' 
+GO'+Char(13)+Char(13)+Char(13) as Sentence  from ##DbFilesInventory
+

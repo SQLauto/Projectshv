@@ -1,0 +1,43 @@
+
+
+declare 		@sCmd1	varchar(2000)
+,		@sCmd2	varchar(2000)
+,		@sCmd3	varchar(2000)
+,		@sCmd4	varchar(2000)
+,		@sCmd5	varchar(2000)
+,		@sCmd6	varchar(2000)
+,		@sCmd	varchar(2000)
+,		@sDate	char(20)
+
+select @sDate = ltrim(replace(replace(CONVERT(varchar(20), getdate(), 120),':',''),' ','-'))
+
+
+select @sCmd = 'K:\MSSQL\Backup\Full\Siebel\Siebel_Full_' + @sDate
+
+select 	@sCmd = rtrim(ltrim(@sCmd))
+
+select 	@sCmd1 = @sCmd + '-Stp1.bak'
+,		@sCmd2 = @sCmd + '-Stp2.bak'
+,		@sCmd3 = @sCmd + '-Stp3.bak'
+,		@sCmd4 = @sCmd + '-Stp4.bak'
+,		@sCmd5 = @sCmd + '-Stp5.bak'
+,		@sCmd6 = @sCmd + '-Stp6.bak'
+				
+exec master.dbo.xp_backup_database @database = 'Siebel'
+,	@filename = @sCmd1
+,	@filename = @sCmd2
+,	@filename = @sCmd3
+,	@filename = @sCmd4
+,	@filename = @sCmd5
+,	@filename = @sCmd6
+,	@backupname = 'Siebel backup'
+,	@desc = 'Stripped Backup of Siebel'
+,	@logging = 0
+,	@with = 'SKIP'
+,	@with = 'STATS = 10'
+,	@compressionlevel  = 6
+
+
+/*
+select replace(replace(CONVERT(varchar(20), getdate(), 120),':',''),' ','-')
+*/

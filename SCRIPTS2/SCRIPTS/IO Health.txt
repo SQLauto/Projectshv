@@ -1,0 +1,72 @@
+You can use the following DMV query to find currently pending I/O requests. You can execute this query periodically to check the health of I/O subsystem and to isolate physical disk(s) that are involved in the I/O bottlenecks.
+
+ 
+
+
+SELECT 
+    database_id, 
+    file_id, 
+    io_stall,
+    io_pending_ms_ticks,
+    scheduler_address 
+FROM    
+    sys.dm_io_virtual_file_stats(NULL, NULL)t1
+INNER JOIN
+       sys.dm_io_pending_io_requests as t2
+ON    t1.file_handle = t2.io_handle
+
+
+If you find, that you regularly have a high number of pending I/O requests, you can use the following query to determine which SQL batches use the most I/O.
+
+
+
+
+SELECT TOP 5 
+    (total_logical_reads/execution_count) as avg_logical_reads,
+    (total_logical_writes/execution_count) as avg_logical_writes,
+    (total_physical_reads/execution_count) as avg_phys_reads,
+     Execution_count, 
+    statement_start_offset as stmt_start_offset, 
+    st.[text], 
+    qp.query_plan
+FROM sys.dm_exec_query_stats  qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
+CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp
+ORDER BY 
+ (total_logical_reads + total_logical_writes) Desc
+
+
+If you are troubleshooting blocked I/O realtime, you can use dm_tran_locks and dm_waiting_tasks to determine what sql is blocking and what is waiting.
+
+ 
+
+
+SELECT 
+    t1.resource_type,
+    'database'=db_name(resource_database_id),
+    'blk object' = t1.resource_associated_entity_id,
+    t1.request_mode,
+    t1.request_session_id,
+    t2.blocking_session_id     
+FROM 
+    sys.dm_tran_locks as t1
+INNER JOIN 
+    sys.dm_os_waiting_tasks as t2
+ON 
+    t1.lock_owner_address = t2.resource_address and
+    t1.request_session_id = t1.request_session_id
+
+ 
+
+The last thing to check when analyzing I/O is the utlization of tempDB.  You can use dm_db_file_space_usage to determine the amount of space that is being used in tempdb by user_objects, internal_objects and the version_store.
+
+ 
+
+
+SELECT
+    SUM (user_object_reserved_page_count)*8 as user_objects_kb,
+    SUM (internal_object_reserved_page_count)*8 as internal_objects_kb,
+    SUM (version_store_reserved_page_count)*8  as version_store_kb,
+    SUM (unallocated_extent_page_count)*8 as freespace_kb
+FROM sys.dm_db_file_space_usage
+WHERE database_id = 2

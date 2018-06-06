@@ -1,0 +1,241 @@
+-- What version and edition of SQL Server are we running?
+SELECT @@version;
+SELECT  SERVERPROPERTY('ProductVersion') 'ProductVersion',
+        SERVERPROPERTY('ProductLevel') 'ProductLevel',
+        SERVERPROPERTY('Edition') 'Edition';
+go
+
+-- Memory allocation across NUMA Nodes
+SELECT  'dm_os_memory_nodes' AS 'DMV', memory_node_id AS 'node_id',
+        virtual_address_space_reserved_kb / 1024 AS 'VAS_reserved_mb',
+        virtual_address_space_committed_kb / 1024 AS 'VAS_committed_mb',
+        single_pages_kb / 1024 AS 'single_pages_mb',
+        multi_pages_kb / 1024 AS 'multi_pages_mb',
+        locked_page_allocations_kb / 1024 AS 'locked_pages_mb'
+FROM    sys.dm_os_memory_nodes
+WHERE   memory_node_id <> 64;
+go
+
+-- VAS, server mem, buffer pool target and total
+SELECT  virtual_memory_in_bytes / ( 1024 * 1024 ) AS 'VAS_mb',
+        physical_memory_in_bytes / ( 1024 * 1024 ) AS 'phys_mem_mb',
+        ( bpool_committed * 8 ) / 1024 AS 'bpool_total_mb',
+        ( bpool_commit_target * 8 ) / 1024 AS 'bpool_target_mb (MaxSMem)',
+        ( bpool_visible * 8 ) / 1024 AS 'bpool_visible_mb'
+FROM    sys.dm_os_sys_info;
+
+-- Memory distribution/state
+SELECT  total_physical_memory_kb / 1024 AS 'phys_mem_mb',
+        available_physical_memory_kb / 1024 AS 'avail_mem_mb',
+        total_page_file_kb / 1024 AS 'pagefile_mb',
+        available_page_file_kb / 1024 AS 'avail_pagefile_mb',
+        system_cache_kb / 1024 AS 'system_cache_mb',
+        ( kernel_paged_pool_kb + kernel_nonpaged_pool_kb ) / 1024 AS 'kernal_pools_mb',
+        system_high_memory_signal_state, system_low_memory_signal_state,
+        system_memory_state_desc
+FROM    sys.dm_os_sys_memory;
+
+-- Memory in use by SQL Server process
+SELECT  total_virtual_address_space_kb / 1024 AS 'VAS_mb',
+        virtual_address_space_reserved_kb / 1024 AS 'VAS_reserved_mb',
+        virtual_address_space_committed_kb / 1024 AS 'VAS_committed_mb',
+        virtual_address_space_available_kb / 1024 AS 'VAS_avail_mb (VAS-Reserved)',
+        physical_memory_in_use_kb / 1024 AS 'SQL_committed_mb',
+        available_commit_limit_kb / 1024 AS 'avail_pagefile_mb', 
+        large_page_allocations_kb / 1024 AS 'lg_pages_mb',
+        locked_page_allocations_kb / 1024 AS 'locked_pgs_mb',
+        memory_utilization_percentage AS '% mem_in_working_set',
+        page_fault_count, process_physical_memory_low,
+        process_virtual_memory_low
+FROM    sys.dm_os_process_memory;
+go
+ 
+-- The Resource Monitor watches for notifications of High or Low memory conditions from the OS
+-- A row is inserted to the Ring Buffer only when memory condidtions change.  On a stable
+-- system there may be very few rows returned.  The Ring Buffers do circular logging, so older 
+-- entries are eventually overwritten.
+SELECT  TOP 5 'dm_os_ring_buffers - RM Notifications' AS DMV,
+        DATEADD(ms, ( r.[timestamp] - s.ms_ticks ), GETDATE()) AS 'Notification_Time',
+        CAST(record AS XML).value('(//Record/ResourceMonitor/Notification)[1]', 'varchar(30)') AS 'Notification_type',
+        CAST(record AS XML).value('(//Record/MemoryRecord/MemoryUtilization)[1]', 'bigint') AS 'MemoryUtilization %',
+        CAST(record AS XML).value('(//Record/MemoryNode/@id)[1]', 'bigint') AS 'Node Id',
+        CAST(record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'int') AS 'Process_Indicator',
+        CAST(record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'int') AS 'System_Indicator',
+        CAST(record AS XML).value('(//Record/MemoryNode/ReservedMemory)[1]', 'bigint') AS 'SQL_ReservedMemory_KB',
+        CAST(record AS XML).value('(//Record/MemoryNode/CommittedMemory)[1]', 'bigint') AS 'SQL_CommittedMemory_KB',
+        CAST(record AS XML).value('(//Record/MemoryNode/AWEMemory)[1]', 'bigint') AS 'SQL_AWEMemory',
+        CAST(record AS XML).value('(//Record/MemoryNode/SinglePagesMemory)[1]', 'bigint') AS 'SinglePagesMemory',
+        CAST(record AS XML).value('(//Record/MemoryNode/MultiplePagesMemory)[1]', 'bigint') AS 'MultiplePagesMemory',
+        CAST(record AS XML).value('(//Record/MemoryRecord/TotalPhysicalMemory)[1]', 'bigint') AS 'TotalPhysicalMemory_KB',
+        CAST(record AS XML).value('(//Record/MemoryRecord/AvailablePhysicalMemory)[1]', 'bigint') AS 'AvailablePhysicalMemory_KB',
+        CAST(record AS XML).value('(//Record/MemoryRecord/TotalPageFile)[1]', 'bigint') AS 'TotalPageFile_KB',
+        CAST(record AS XML).value('(//Record/MemoryRecord/AvailablePageFile)[1]', 'bigint') AS 'AvailablePageFile_KB',
+        CAST(record AS XML).value('(//Record/MemoryRecord/TotalVirtualAddressSpace)[1]', 'bigint') AS 'TotalVirtualAddressSpace_KB',
+        CAST(record AS XML).value('(//Record/MemoryRecord/AvailableVirtualAddressSpace)[1]', 'bigint') AS 'AvailableVirtualAddressSpace_KB'
+FROM    sys.dm_os_ring_buffers r
+        CROSS JOIN sys.dm_os_sys_info s
+WHERE   r.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR'
+ORDER BY r.timestamp DESC;
+go
+
+-- To view or access all configuration settings (no harm in leaving this enabled)
+EXEC sp_configure 'Show Advanced Options', 1;
+RECONFIGURE;
+
+-- To check particular settings
+EXEC sp_configure 'Max Server Memory';
+EXEC sp_configure 'Min Server Memory';
+
+-- To change a setting add the parameter (in MB)
+EXEC sp_configure 'Max Server Memory', 4048;
+RECONFIGURE;
+go
+
+-- What's the buffer pool by database
+SELECT  CASE database_id
+          WHEN 32767 THEN 'ResourceDb'
+          ELSE DB_NAME(database_id)
+        END AS 'database', COUNT(page_id) AS 'cached_pgs',
+        ( COUNT(page_id) * 8 ) / 1024 AS 'cached_mb'
+FROM    sys.dm_os_buffer_descriptors
+GROUP BY database_id
+ORDER BY COUNT(page_id) DESC;
+
+-- At the database object level
+SELECT  COUNT(page_id) AS 'cached_pgs',
+        ( COUNT(page_id) * 8 ) / 1024 AS 'cached_mb',
+        --DB_NAME(database_id) AS 'database', 
+        SCHEMA_NAME(t.schema_id) + '.' + t.name AS 'object_name', obj.index_id
+FROM    sys.dm_os_buffer_descriptors AS bd
+        INNER JOIN ( SELECT object_id, index_id, allocation_unit_id
+                     FROM   sys.allocation_units AS au
+                            INNER JOIN sys.partitions AS p ON au.container_id = p.hobt_id
+                                                              AND ( au.type = 1
+                                                              OR au.type = 3 )
+                     UNION ALL
+                     SELECT object_id, index_id, allocation_unit_id
+                     FROM   sys.allocation_units AS au
+                            INNER JOIN sys.partitions AS p ON au.container_id = p.partition_id
+                                                              AND au.type = 2
+                   ) AS obj ON bd.allocation_unit_id = obj.allocation_unit_id
+        INNER JOIN sys.objects t ON obj.object_id = t.object_id  /* use sys.tables to limit to exclude system tables */
+WHERE   bd.database_id = DB_ID()  /* comment out this line to see numbers for all DBs */
+GROUP BY bd.database_id, t.schema_id, t.name, obj.index_id
+ORDER BY bd.database_id, COUNT(page_id) DESC;
+go
+
+-- List all Clerks that are consuming memory (multi page users at the top)
+SELECT  type, SUM(single_pages_kb) AS 'single_pg_allocs',
+        SUM(multi_pages_kb) AS 'multi_pg_allocs'
+FROM    sys.dm_os_memory_clerks
+WHERE   ( single_pages_kb > 0 OR multi_pages_kb > 0 OR virtual_memory_committed_kb > 0 )
+GROUP BY type
+ORDER BY SUM(multi_pages_kb) DESC; 
+go
+
+-- Memory allocated to various plan types (ordered by single use)
+SELECT  objtype 'Cache Type', COUNT_BIG(*) 'Total Plans',
+        CAST(SUM(CAST(size_in_bytes AS DECIMAL(12, 2))) / ( 1024 * 1024 ) AS DECIMAL(12,2)) AS 'Total MBs',
+        AVG(usecounts) 'Avg Use Count', SUM(CASE WHEN usecounts = 1 THEN 1 ELSE 0 END) 'Single Use Plans',
+        CAST(SUM(CAST(( CASE WHEN usecounts = 1 THEN size_in_bytes ELSE 0
+                        END ) AS DECIMAL(12, 2))) / ( 1024 * 1024 ) AS DECIMAL(12, 2)) 'Single Use MBs'
+FROM    sys.dm_exec_cached_plans
+GROUP BY objtype
+ORDER BY SUM(CASE WHEN usecounts = 1 THEN 1 ELSE 0 END) DESC;
+go
+
+-- Optimizing ad hoc Workloads
+-- http://blogs.msdn.com/b/timchapman/archive/2012/09/10/optimizing-ad-hoc-workloads.aspx
+EXEC sp_configure 'Optimize for ad hoc workloads', 1;
+RECONFIGURE;
+go
+
+
+-- Taking deeper look at cache internals
+-- High level allocation info for one Clerk
+SELECT  type, name, memory_node_id, single_pages_kb, multi_pages_kb,
+        awe_allocated_kb
+FROM    sys.dm_os_memory_clerks
+WHERE   type = 'CACHESTORE_SQLCP';
+-- Counters for the particular cache type
+SELECT  cache_address, type, single_pages_kb, multi_pages_kb,
+        single_pages_in_use_kb, multi_pages_in_use_kb, entries_count,
+        entries_in_use_count
+FROM    sys.dm_os_memory_cache_counters
+WHERE   type = 'CACHESTORE_SQLCP';
+-- Details about the cache entries
+-- Here you can see the original and current Costs assigned to each entry
+SELECT  cache_address, name, type, in_use_count, is_dirty, disk_ios_count,
+        context_switches_count, original_cost, current_cost,
+        pages_allocated_count
+FROM    sys.dm_os_memory_cache_entries
+WHERE   type = 'CACHESTORE_SQLCP';
+-- Info on the clock hands associated with this cache
+SELECT  cache_address, name, type, clock_hand, clock_status, rounds_count,
+        removed_all_rounds_count, updated_last_round_count,
+        removed_last_round_count, last_tick_time, round_start_time,
+        last_round_start_time
+FROM    sys.dm_os_memory_cache_clock_hands
+WHERE   type = 'CACHESTORE_SQLCP';
+
+
+-- Query Memory 
+SELECT  type, name, memory_node_id, single_pages_kb, multi_pages_kb,
+        awe_allocated_kb
+FROM    sys.dm_os_memory_clerks
+WHERE   type = 'MEMORYCLERK_SQLQERESERVATIONS' AND
+        memory_node_id <> 64;
+
+-- Details about queries requesting memory grants
+SELECT  session_id, request_id, scheduler_id, dop AS 'parallelism',
+        request_time, grant_time,
+        requested_memory_kb / 1024 AS 'requested_mem_mb',
+        granted_memory_kb / 1024 AS 'granted_mem_mb',
+        required_memory_kb / 1024 AS 'reqired_mem_mb',
+        used_memory_kb / 1024 AS 'used_mem_mb',
+        max_used_memory_kb / 1024 AS 'max_used_mem_mb', query_cost,
+        timeout_sec, resource_semaphore_id, queue_id, wait_order,
+        is_next_candidate, wait_time_ms, plan_handle, sql_handle, group_id,
+        pool_id, is_small, ideal_memory_kb
+FROM    sys.dm_exec_query_memory_grants;
+
+-- Resource Semaphore memory status
+SELECT  CASE resource_semaphore_id
+          WHEN 0 THEN 'Regular'
+          WHEN 1 THEN 'Small Query'
+          ELSE 'Unknown'
+        END AS 'res_semaphore_type',
+        target_memory_kb / 1024 AS 'grant_usage_target_mem_mb',
+        max_target_memory_kb / 1024 AS 'potential_max_target_mem_mb',
+        total_memory_kb / 1024 AS 'total_mem_mb (avail + granted)',
+        available_memory_kb / 1024 AS 'avail_mem_mb',
+        granted_memory_kb / 1024 AS 'granted_mem_mb',
+        used_memory_kb / 1024 AS 'used_mem_mb', grantee_count, waiter_count,
+        timeout_error_count, forced_grant_count
+FROM    sys.dm_exec_query_resource_semaphores
+WHERE   pool_id = 2;  /* defalt pool */
+go
+
+
+-- Troubleshooting checks
+
+-- Search the error log for CLR and COM related messages
+EXEC sp_readerrorlog 0, 1, 'AppDomain';
+EXEC sp_readerrorlog 0, 1, 'sp_OACreate';
+
+-- Are we using linked servers?
+SELECT * FROM sys.servers;
+
+-- Extended stored procs might be a source of memory leaks
+SELECT * FROM sys.extended_procedures;
+
+-- Third party software running in-process
+SELECT * FROM sys.dm_os_loaded_modules WHERE company <> 'Microsoft Corporation';
+
+
+
+
+
+
+
+

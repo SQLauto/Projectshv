@@ -1,0 +1,130 @@
+declare  @Server_name nvarchar(200)
+Declare @VERSION as nvarchar(1000)
+
+set @VERSION =( select @@VERSION)
+set @Server_name= (Select @@servername)
+
+
+
+
+select @Server_name As Server_name  , 
+name, database_id, state_desc,
+ recovery_model_desc,compatibility_level, collation_name,@VERSION as Server_Version  from sys.databases 
+
+
+oooooooooooooooooo
+
+
+SELECT  CONVERT(CHAR(100), SERVERPROPERTY('Servername')) AS Server,
+        CONVERT(CHAR(100), SERVERPROPERTY('ProductVersion')) AS ProductVersion,
+        CONVERT(CHAR(100), SERVERPROPERTY('ProductLevel')) AS ProductLevel,
+        CONVERT(CHAR(100), SERVERPROPERTY('ResourceLastUpdateDateTime')) AS ResourceLastUpdateDateTime,
+        CONVERT(CHAR(100), SERVERPROPERTY('ResourceVersion')) AS ResourceVersion,
+        CASE WHEN SERVERPROPERTY('IsIntegratedSecurityOnly') = 1
+             THEN 'Integrated security'
+             WHEN SERVERPROPERTY('IsIntegratedSecurityOnly') = 0
+             THEN 'Not Integrated security'
+        END AS IsIntegratedSecurityOnly,
+        CASE WHEN SERVERPROPERTY('EngineEdition') = 1 THEN 'Personal Edition'
+             WHEN SERVERPROPERTY('EngineEdition') = 2 THEN 'Standard Edition'
+             WHEN SERVERPROPERTY('EngineEdition') = 3
+             THEN 'Enterprise Edition'
+             WHEN SERVERPROPERTY('EngineEdition') = 4 THEN 'Express Edition'
+        END AS EngineEdition,
+        CONVERT(CHAR(100), SERVERPROPERTY('InstanceName')) AS InstanceName,
+        CONVERT(CHAR(100), SERVERPROPERTY('ComputerNamePhysicalNetBIOS')) AS ComputerNamePhysicalNetBIOS,
+        CONVERT(CHAR(100), SERVERPROPERTY('LicenseType')) AS LicenseType,
+        CONVERT(CHAR(100), SERVERPROPERTY('NumLicenses')) AS NumLicenses,
+        CONVERT(CHAR(100), SERVERPROPERTY('BuildClrVersion')) AS BuildClrVersion,
+        CONVERT(CHAR(100), SERVERPROPERTY('Collation')) AS Collation,
+        CONVERT(CHAR(100), SERVERPROPERTY('CollationID')) AS CollationID,
+        CONVERT(CHAR(100), SERVERPROPERTY('ComparisonStyle')) AS ComparisonStyle,
+        CASE WHEN CONVERT(CHAR(100), SERVERPROPERTY('EditionID')) = -1253826760
+             THEN 'Desktop Edition'
+             WHEN SERVERPROPERTY('EditionID') = -1592396055
+             THEN 'Express Edition'
+             WHEN SERVERPROPERTY('EditionID') = -1534726760
+             THEN 'Standard Edition'
+             WHEN SERVERPROPERTY('EditionID') = 1333529388
+             THEN 'Workgroup Edition'
+             WHEN SERVERPROPERTY('EditionID') = 1804890536
+             THEN 'Enterprise Edition'
+             WHEN SERVERPROPERTY('EditionID') = -323382091
+             THEN 'Personal Edition'
+             WHEN SERVERPROPERTY('EditionID') = -2117995310
+             THEN 'Developer Edition'
+             WHEN SERVERPROPERTY('EditionID') = 610778273
+             THEN 'Enterprise Evaluation Edition'
+             WHEN SERVERPROPERTY('EditionID') = 1044790755
+             THEN 'Windows Embedded SQL'
+             WHEN SERVERPROPERTY('EditionID') = 4161255391
+             THEN 'Express Edition with Advanced Services'
+        END AS ProductEdition,
+        CASE WHEN CONVERT(CHAR(100), SERVERPROPERTY('IsClustered')) = 1
+             THEN 'Clustered'
+             WHEN SERVERPROPERTY('IsClustered') = 0 THEN 'Not Clustered'
+             WHEN SERVERPROPERTY('IsClustered') = NULL THEN 'Error'
+        END AS IsClustered,
+        CASE WHEN CONVERT(CHAR(100), SERVERPROPERTY('IsFullTextInstalled')) = 1
+             THEN 'Full-text is installed'
+             WHEN SERVERPROPERTY('IsFullTextInstalled') = 0
+             THEN 'Full-text is not installed'
+             WHEN SERVERPROPERTY('IsFullTextInstalled') = NULL THEN 'Error'
+        END AS IsFullTextInstalled,
+        CONVERT(CHAR(100), SERVERPROPERTY('SqlCharSet')) AS SqlCharSet,
+        CONVERT(CHAR(100), SERVERPROPERTY('SqlCharSetName')) AS SqlCharSetName,
+        CONVERT(CHAR(100), SERVERPROPERTY('SqlSortOrder')) AS SqlSortOrderID,
+        CONVERT(CHAR(100), SERVERPROPERTY('SqlSortOrderName')) AS SqlSortOrderName
+ORDER BY CONVERT(CHAR(100), SERVERPROPERTY('Servername'))  
+
+
+
+
+----- YYYYY este otro..
+
+
+IF EXISTS ( SELECT  *
+            FROM    tempdb.dbo.sysobjects
+            WHERE   id = OBJECT_ID(N'[tempdb].[dbo].[HoldforEachDB]') ) 
+    DROP TABLE [tempdb].[dbo].[HoldforEachDB] ; 
+CREATE TABLE [tempdb].[dbo].[HoldforEachDB]
+    (
+      [Server] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                               NULL,
+      [DatabaseName] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                                     NOT NULL,
+      [Size] [int] NOT NULL,
+      [File_Status] [int] NULL,
+      [Name] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                             NOT NULL,
+      [Filename] [nvarchar](260) COLLATE SQL_Latin1_General_CP1_CI_AS
+                                 NOT NULL,
+      [Status] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                               NULL,
+      [Updateability] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                                      NULL,
+      [User_Access] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                                    NULL,
+      [Recovery] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS
+                                 NULL
+    )
+ON  [PRIMARY]
+INSERT  INTO [tempdb].[dbo].[HoldforEachDB]
+        EXEC sp_MSforeachdb 'SELECT CONVERT(char(100), SERVERPROPERTY(''Servername'')) AS Server,
+                 ''?'' as DatabaseName,[?]..sysfiles.size, [?]..sysfiles.status, [?]..sysfiles.name, [?]..sysfiles.filename,convert(sysname,DatabasePropertyEx(''?'',''Status'')) as Status,
+convert(sysname,DatabasePropertyEx(''?'',''Updateability'')) as Updateability,
+ convert(sysname,DatabasePropertyEx(''?'',''UserAccess'')) as User_Access,
+convert(sysname,DatabasePropertyEx(''?'',''Recovery'')) as Recovery From [?]..sysfiles '
+
+SELECT [Server]
+      ,[DatabaseName]
+      ,[Size]
+      ,[File_Status]
+      ,[Name]
+      ,[Filename]
+      ,[Status]
+      ,[Updateability]
+      ,[User_Access]
+      ,[Recovery]
+  FROM [tempdb].[dbo].[HoldforEachDB] 
+

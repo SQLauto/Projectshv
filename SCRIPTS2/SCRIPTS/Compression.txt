@@ -1,0 +1,11 @@
+sp_CONFIGURE 'show advanced options',1
+RECONFIGURE
+
+
+	sp_configure 'backup compression default'
+
+go
+
+sp_configure 'backup compression default',1
+go
+reconfigure

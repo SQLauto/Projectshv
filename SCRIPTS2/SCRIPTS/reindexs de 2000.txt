@@ -1,0 +1,8 @@
+--status
+DBCC SHOWCONTIG('Alphabet') WITH FAST, TABLERESULTS, ALL_INDEXES
+--defrag si logical esta arria de 20
+DBCC INDEXDEFRAG('yesterday','Alphabet', 'PK_Alphabet') --WITH FAST, TABLERESULTS, ALL_INDEXES
+--reindex si logical esta arriba de 30
+DBCC DBREINDEX ('Alphabet', 'PK_Alphabet')
+--todos los indices de una tabla
+DBCC DBREINDEX ('Alphabet', '')

@@ -1,0 +1,181 @@
+use HotDocs
+go
+
+
+
+SET NOCOUNT ON
+
+
+
+
+create table #temp_perms  
+( Line datetime 
+,name text --varchar(8000)
+ )      
+ 
+ --drop table #temp_perms
+ 
+ 
+-- select * from #temp_perms
+
+
+
+
+
+
+
+------------CREATE TABLE #temp_perms
+------------	(
+------------	Line int NOT NULL,
+------------	chat text NULL
+------------	)  ON [PRIMARY]
+------------	 TEXTIMAGE_ON [PRIMARY]
+------------GO
+------------ALTER TABLE #temp_perms ADD CONSTRAINT
+------------	idx PRIMARY KEY CLUSTERED 
+------------	(
+------------	Line
+------------	) WITH( PAD_INDEX = OFF, FILLFACTOR = 1, 
+------------	STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF,
+------------	 ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+------------GO
+------------ALTER TABLE #temp_perms SET (LOCK_ESCALATION = TABLE)
+------------GO
+
+--drop table #temp_perms
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Insert into #temp_perms
+values (GETDATE(), (SELECT 'USE '+DB_NAME(dbid)+CHAR(10)+'GO' FROM master..sysprocesses WHERE spid=@@SPID))
+
+
+--Select name from #temp_perms
+
+
+Insert into #temp_perms
+values (GETDATE(),'-------------') 
+
+
+
+---
+SELECT 'IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='''+U.name+''')'
++CHAR(10)+'CREATE USER '+QUOTENAME(U.name)+' FOR LOGIN '+QUOTENAME(L.name COLLATE DATABASE_DEFAULT)
++	CASE U.type_desc
+		WHEN 'WINDOWS_USER' THEN ' WITH DEFAULT_SCHEMA = '+QUOTENAME(U.default_schema_name)+';'
+		WHEN 'SQL_USER' THEN ' WITH DEFAULT_SCHEMA = '+QUOTENAME(U.default_schema_name)+';'
+		WHEN 'WINDOWS_GROUP' THEN ';'
+	END AS [-----GRANTING DB ACCESS TO USERS-----]
+FROM sys.database_principals U
+LEFT JOIN master.sys.server_principals L ON U.sid = L.sid
+WHERE U.principal_id > 4 AND U.type_desc in ('SQL_USER','WINDOWS_USER','WINDOWS_GROUP') AND L.sid IS NOT NULL
+GO
+
+
+SELECT 'IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='''+name+''')' +CHAR(10)
+	+CASE type_desc
+		WHEN 'DATABASE_ROLE' THEN 'CREATE ROLE '+QUOTENAME(name)+' AUTHORIZATION '+QUOTENAME(USER_NAME(owning_principal_id))
+		WHEN 'APPLICATION_ROLE' THEN 'CREATE APPLICATION ROLE '+QUOTENAME(name)+' WITH PASSWORD = ''xxxxxxxx'', DEFAULT_SCHEMA = '+QUOTENAME(default_schema_name)
+	END AS [-----CREATING DB ROLES-----]
+FROM sys.database_principals
+WHERE name != 'public' AND type_desc IN ('DATABASE_ROLE','APPLICATION_ROLE') AND is_fixed_role <> 1
+
+
+
+SELECT 'EXEC sp_addrolemember '''+USER_NAME(role_principal_id)+''','''+USER_NAME(member_principal_id)+'''' AS [-----ADDING USERS TO DB ROLES-----] 
+FROM sys.database_role_members 
+WHERE USER_NAME(member_principal_id) != 'dbo'
+GO
+
+
+
+
+SELECT CASE state_desc
+			WHEN 'DENY' THEN 'DENY '
+			WHEN 'REVOKE' THEN 'REVOKE '
+			WHEN 'GRANT' THEN 'GRANT '
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN 'GRANT '
+		END
++ permission_name + ' TO '+ QUOTENAME(USER_NAME(grantee_principal_id))
++	CASE state_desc
+			WHEN 'DENY' THEN ';'
+			WHEN 'REVOKE' THEN ';'
+			WHEN 'GRANT' THEN ';'
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN ' WITH GRANT OPTION;'
+	END AS [--CREATE / BACKUP PERMISSIONS---]
+FROM sys.database_permissions
+WHERE USER_NAME(grantee_principal_id) NOT IN ('dbo','INFORMATION_SCHEMA','sys') AND OBJECT_NAME(major_id) IS NULL AND minor_id=0
+GO
+
+
+SELECT CASE P.state_desc
+			WHEN 'DENY' THEN 'DENY '
+			WHEN 'REVOKE' THEN 'REVOKE '
+			WHEN 'GRANT' THEN 'GRANT '
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN 'GRANT '
+		END
++ P.permission_name + ' ON ' +QUOTENAME(Schema_Name(O.schema_id))  COLLATE DATABASE_DEFAULT+'.'+QUOTENAME(OBJECT_NAME(P.major_id))  COLLATE DATABASE_DEFAULT
++ ' TO '+QUOTENAME(USER_NAME(P.grantee_principal_id)) COLLATE DATABASE_DEFAULT
++	CASE P.state_desc
+			WHEN 'DENY' THEN ';'
+			WHEN 'REVOKE' THEN ';'
+			WHEN 'GRANT' THEN ';'
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN ' WITH GRANT OPTION;'
+	END AS [----OBJECT LEVEL PERMISSIONS----]
+FROM sys.database_permissions P
+JOIN sys.objects O on O.object_id=P.major_id
+WHERE P.major_id > 0 			--eliminating systemobjects
+AND P.minor_id=0				--elininating column level permissions
+GO
+
+
+SELECT CASE P.state_desc
+			WHEN 'DENY' THEN 'DENY '
+			WHEN 'REVOKE' THEN 'REVOKE '
+			WHEN 'GRANT' THEN 'GRANT '
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN 'GRANT '
+		END
++ P.permission_name + ' ON ' +QUOTENAME(Schema_Name(O.schema_id)) COLLATE DATABASE_DEFAULT+'.'+QUOTENAME(OBJECT_NAME(P.major_id)) COLLATE DATABASE_DEFAULT
++'('+COL_NAME(P.major_id,P.minor_id)+')'
++ ' TO '+QUOTENAME(USER_NAME(P.grantee_principal_id)) COLLATE DATABASE_DEFAULT
++	CASE P.state_desc
+			WHEN 'DENY' THEN ';'
+			WHEN 'REVOKE' THEN ';'
+			WHEN 'GRANT' THEN ';'
+			WHEN 'GRANT_WITH_GRANT_OPTION' THEN ' WITH GRANT OPTION;'
+	END AS [----COLUMN LEVEL PERMISSIONS----]
+FROM sys.database_permissions P
+JOIN sys.objects O on O.object_id=P.major_id
+WHERE P.minor_id > 0
+GO
+
+
+SET NOCOUNT OFF
+

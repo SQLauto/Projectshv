@@ -1,0 +1,3 @@
+/*to find where we save the traces
+By Carlos Elizondo*/
+Select * from ::fn_trace_getinfo(default)

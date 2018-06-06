@@ -1,0 +1,60 @@
+
+
+GO
+SET NOCOUNT ON
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+IF OBJECT_ID('tempdb..#IndexCommandsTable') IS NOT NULL
+    DROP TABLE #IndexCommandsTable
+             
+SELECT b.name AS Name, 'ALTER INDEX '  + b.name + CASE WHEN avg_fragmentation_in_percent < 30 THEN  ' ON [' + OBJECT_NAME(a.object_id) + '] REORGANIZE' ELSE  ' ON [' + OBJECT_NAME(a.object_id) + '] REBUILD WITH (ONLINE = ' + CASE WHEN (a.index_type_desc = 'XML INDEX' or a.index_type_desc = 'SPATIAL INDEX') THEN 'OFF' ELSE 'ON' END + ')' END as IndexCommand
+
+--SELECT b.name as Name, 'ALTER INDEX '+b.name+' ON '+OBJECT_NAME(a.object_id)+' SET ( ALLOW_PAGE_LOCKS = ON)' as IndexCommand
+
+INTO #IndexCommandsTable 
+
+FROM sys.dm_db_index_physical_stats (DB_ID(), NULL, NULL, NULL, 'DETAILED') AS a
+
+    JOIN sys.indexes AS b ON a.object_id = b.object_id AND a.index_id = b.index_id
+
+                JOIN sys.tables t WITH (nolock) ON a.object_id = t.object_id
+
+WHERE avg_fragmentation_in_percent > 5 AND b.name IS NOT NULL
+
+AND record_count > 10000 
+
+AND index_type_desc != 'HEAP'
+
+AND index_level = 0
+
+ 
+
+DECLARE @SQLCommand VARCHAR(300), @Name VARCHAR(100)
+
+ 
+
+WHILE EXISTS(SELECT 1 FROM #IndexCommandsTable)
+BEGIN 
+
+
+               SELECT TOP 1 @Name = Name , @SQLCommand = IndexCommand FROM #IndexCommandsTable 
+                PRINT @SQLCommand
+                EXEC(@SQLCommand)
+
+                DELETE TOP(1) FROM #IndexCommandsTable WHERE Name = @Name
+
+END
+DROP TABLE #IndexCommandsTable
+
+
+--EXEC sys.sp_MSforeachtable 
+
+--@command1 = N'UPDATE STATISTICS ? WITH FULLSCAN, COLUMNS;'
+
+ 

@@ -1,0 +1,42 @@
+Select * from ::fn_trace_getinfo(default) 
+
+
+
+
+
+
+--Ver los traces que se están realizando en ese momento
+		       Select * from ::fn_trace_getinfo(default)
+
+		       --Select * from master..sysprocesses where spid>50 and program_name='SQL Profiler'
+
+		       --exec Sp_trace_setstatus trace_ID,status
+		              --status: 0	Stops the specified trace.
+		                      --1	Starts the specified trace.
+		                      --2	Closes the specified trace and deletes its definition from the server.
+
+		       exec Sp_trace_setstatus 1,0
+GO
+
+
+
+-- este e spara matarlos  este es el id y el otro...
+		       exec Sp_trace_setstatus 1,2
+
+
+
+
+
+
+
+
+
+este jala
+
+select * from sys.traces
+
+select * From fn_trace_gettable('E:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\Log\log_2425.trc', default)
+where DatabaseID=32
+
+
+

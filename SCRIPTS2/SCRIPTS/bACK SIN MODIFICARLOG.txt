@@ -1,0 +1,2 @@
+BACKUP DATABASE <dbname> TO DISK = <ruta>
+WITH COPY_ONLY

@@ -1,0 +1,21 @@
+sp_configure 'show advanced options', 1;
+GO
+
+RECONFIGURE;
+GO
+
+DECLARE @totalRAM INT
+DECLARE @sqlCMD VARCHAR(2000)
+
+SELECT @totalRAM = ([total_physical_memory_kb] / 1024) - 2048
+FROM [master].[sys].[dm_os_sys_memory]
+
+--SELECT @totalRAM
+
+SET @sqlCMD = 'sp_configure ''max server memory'', ' + CAST(@totalRAM AS VARCHAR(6)) + ';'
+PRINT @sqlCMD
+EXEC (@sqlCMD)
+
+GO
+RECONFIGURE;
+GO

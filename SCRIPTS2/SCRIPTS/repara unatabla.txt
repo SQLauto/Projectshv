@@ -1,0 +1,20 @@
+
+
+USE [master]
+GO
+ALTER DATABASE [VirtualCenter] SET  SINGLE_USER WITH ROLLBACK IMMEDIATE
+GO
+
+
+use VirtualCenter
+GO
+
+
+dbcc CHECKTABLE  ('VirtualCenter',REPAIR_ALLOW_DATA_LOSS)  with no_infomsgs ,all_errormsgs
+
+
+
+USE [master]
+GO
+ALTER DATABASE [VirtualCenter] SET  Multi_USER WITH ROLLBACK IMMEDIATE
+GO

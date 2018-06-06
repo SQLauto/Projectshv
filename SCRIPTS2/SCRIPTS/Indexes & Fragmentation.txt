@@ -1,0 +1,40 @@
+Index DMVs:
+
+Missing indexes:
+
+SELECT TOP 50 convert(int,(user_seeks + user_scans) * avg_total_user_cost * 
+	(avg_user_impact * 0.01)) as index_advantage, migs.user_seeks, 
+	migs.user_scans, object_name(mid.object_id) as tablename, 
+	mid.equality_columns, mid.inequality_columns, mid.included_columns 
+	FROM sys.dm_db_missing_index_group_stats migs, sys.dm_db_missing_index_details mid, 
+		sys.dm_db_missing_index_groups mig
+	where migs.group_handle = mig.index_group_handle and mid.index_handle=mig.index_handle 
+	ORDER BY index_advantage desc
+
+
+
+-- Current index analysis:
+select db_name(database_id) database_name, object_name(s.object_id) table_name, i.name index_name, user_seeks, user_scans, user_lookups, user_updates
+	from sys.dm_db_index_usage_stats s
+	join sys.indexes i on s.object_id = i.object_id and s.index_id = i.index_id
+	where database_id = db_id()
+		and s.object_id > 1000
+		and s.index_id > 0
+	order by 2, 3
+
+
+-- Table fragmentation:
+SELECT 'DBCC SHOWCONTIG(' + CAST(object_id AS NVARCHAR(255)) + ')' FROM sys.objects WHERE TYPE='U'
+
+http://www.sql-server-performance.com/articles/dba/dt_dbcc_showcontig_p1.aspx
+
+
+-- Index fragmentation:
+SELECT OBJECT_NAME(object_id), * FROM sys.dm_db_index_physical_stats (DB_ID('STaG_Upload'), NULL, NULL, NULL, 'DETAILED')
+
+
+SELECT 'DBCC SHOW_STATISTICS (''' + so.name + ''', ' + si.name + ') WITH STAT_HEADER;' FROM sys.indexes si
+	INNER JOIN sys.objects so
+		ON si.object_id=so.object_id
+	WHERE (so.TYPE='u') AND (si.type>0)
+

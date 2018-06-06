@@ -1,0 +1,73 @@
+/*Filters to errorlogs Several ways to add it in a table
+By Carlos Elizondo*/
+
+DECLARE @logs TABLE
+(
+LogDate DATETIME,
+ProcessInfo VARCHAR(252),
+Text VARCHAR(MAX)
+)
+ 
+INSERT INTO @logs
+EXEC sp_readerrorlog
+ 
+ 
+--INSERT INTO @logs
+--EXEC sp_readerrorlog 1
+ 
+ 
+SELECT * 
+		Into #Temp 
+FROM @logs 
+		select * from #Temp
+Where text like '%logi%'
+
+		drop table #Temp
+GO
+
+
+ooo
+-------------
+
+
+CREATE TABLE #tempTable(
+	LogDate DATETIME,
+	ProcessInfo VARCHAR(252),
+	Text VARCHAR(MAX))
+
+ 
+INSERT INTO #tempTable
+EXEC sp_readerrorlog
+ 
+ 
+--INSERT INTO @logs
+--EXEC sp_readerrorlog 1
+ 
+ 
+SELECT *  From #tempTable 
+Where text like '%logi%'
+
+		drop table #tempTable
+GO
+
+
+------------
+ EXEC xp_ReadErrorLog 0, 1, 'Log'
+
+
+----Reads the current sql server log
+exec master..xp_readerrorlog
+exec master..xp_readerrorlog 0, 1
+
+
+- Reads SQL Server error log from ERRORLOG.1 file
+EXEC xp_ReadErrorLog 1
+
+--Reads the previous sql server log
+exec master..xp_readerrorlog 1, 1
+
+--Reads the current sql server agent log
+exec master..xp_readerrorlog 0, 2
+
+--Reads the Login  Failed log
+exec master..xp_ReadErrorLog 0, 1, 'Failed', 'login'

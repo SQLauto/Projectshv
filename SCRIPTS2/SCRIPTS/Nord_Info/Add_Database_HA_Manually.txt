@@ -1,0 +1,60 @@
+--For non PCI we share D0319P67
+   --Backup DB in primary  
+   --AADBTRAN02 master
+BACKUP DATABASE [ProductCatalog] TO  DISK = N'AADBTRANS02\SqlDump\HA\ProductCatalog.bak' WITH NOFORMAT, NOINIT, NOSKIP, REWIND, NOUNLOAD, COMPRESSION,  STATS = 5  
+ 
+  
+ --Backup log in primary  
+ --AADBTRANS02 master
+BACKUP LOG [ProductCatalog] TO  DISK = N'AADBTRANS02\SqlDump\HA\ProductCatalog.trn' WITH NOFORMAT, NOINIT, NOSKIP, REWIND, NOUNLOAD, COMPRESSION,  STATS = 5  
+
+ 
+ --Restore db and log in secondary  
+ --AADBTRANS03 master
+RESTORE DATABASE [ProductCatalog] FROM  DISK = N'AADBTRANS02\SqlDump\HA\ProductCatalog.bak' WITH  NORECOVERY,  NOUNLOAD,  STATS = 5  
+  
+RESTORE LOG [ProductCatalog] FROM  DISK = N'AADBTRANS02\SqlDump\HA\ProductCatalog.trn' WITH  NORECOVERY,  NOUNLOAD,  STATS = 5  
+
+  
+  
+ --Add db to availability group  
+ --AADBTRANSSQL master
+ALTER AVAILABILITY GROUP [aadbtransAVG] ADD DATABASE [ProductCatalog]
+
+  
+ --Join AG  
+ --AADBTRANS03 master
+ALTER DATABASE [ProductCatalog] SET HADR AVAILABILITY GROUP = [aadbtransAVG]  
+
+--SELECT * FROM sys.dm_hadr_database_replica_states
+--SELECT * FROM sys.dm_hadr_availability_replica_states
+--SELECT * FROM sys.dm_hadr_availability_group_states
+
+
+-- PRIMARY
+DECLARE @dbname VARCHAR(20) = 'AdamLicensing'
+DECLARE @ag VARCHAR(20) = 'DBADMQSQL-AG'
+DECLARE @sqlcmd VARCHAR(500)
+
+SET @sqlcmd = 'BACKUP DATABASE ['+@dbname+'] TO  DISK = N''H:\SQLBkup\HA\'+@dbname+'.bak'' WITH NOFORMAT, NOINIT, NOSKIP, REWIND, NOUNLOAD, COMPRESSION,  STATS = 5'
+EXEC (@sqlcmd)
+
+SET @sqlcmd = 'BACKUP LOG ['+@dbname+'] TO  DISK = N''H:\SQLBkup\HA\'+@dbname+'.trn'' WITH NOFORMAT, NOINIT, NOSKIP, REWIND, NOUNLOAD, COMPRESSION,  STATS = 5'
+EXEC (@sqlcmd)
+
+SET @sqlcmd = 'ALTER AVAILABILITY GROUP ['+@ag+'] ADD DATABASE ['+@dbname+']'
+EXEC (@sqlcmd)
+
+-- SECONDARY
+DECLARE @dbname VARCHAR(20) = 'AdamLicensing'
+DECLARE @ag VARCHAR(20) = 'DBADMQSQL-AG'
+DECLARE @sqlcmd VARCHAR(500)
+
+SET @sqlcmd = 'RESTORE DATABASE ['+@dbname+'] FROM  DISK = N''H:\SQLBkup\HA\'+@dbname+'.bak'' WITH  NORECOVERY,  NOUNLOAD, REPLACE, STATS = 5'
+EXEC (@sqlcmd)
+  
+SET @sqlcmd = 'RESTORE LOG ['+@dbname+'] FROM  DISK = N''H:\SQLBkup\HA\'+@dbname+'.trn'' WITH  NORECOVERY,  NOUNLOAD,  STATS = 5'
+EXEC (@sqlcmd)
+
+SET @sqlcmd = 'ALTER DATABASE ['+@dbname+'] SET HADR AVAILABILITY GROUP = ['+@ag+']'
+EXEC (@sqlcmd)

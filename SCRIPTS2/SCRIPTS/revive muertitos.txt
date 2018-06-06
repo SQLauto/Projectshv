@@ -1,0 +1,13 @@
+priimero busca errores en el log. si es un disco de nada va  aservir revivirla
+
+seguno si es por espacio  o comqieura queires revivirla..
+
+corre esto
+
+
+sp_resetstatus 'name'
+
+despues
+dbcc dbrecover ('name')
+
+despues un check db

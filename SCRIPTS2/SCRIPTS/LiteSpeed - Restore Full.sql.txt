@@ -1,0 +1,137 @@
+xp_sqllitespeed_version
+
+
+--checar reporte
+
+exec master.dbo.xp_restore_filelistonly
+ @filename = 'H:\MSSQL\BACKUP\TEST4_Full.BKP'
+
+
+-- sql
+
+
+RESTORE HEADERONLY 
+FROM DISK = N'C:\AdventureWorks-FullBackup.bak' 
+
+
+
+
+-----
+ALTER DATABASE [DIAMOND_PRE_PROD] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
+GO
+
+ALTER DATABASE [DIAMOND_PRE_PROD] SET multi_USER WITH ROLLBACK IMMEDIATE
+go
+
+
+EXEC master.dbo.xp_restore_database
+  @database = 'DIAMOND_PRE_PROD',
+  @filename =  '\\WSIYA34728\E$\SQLDumps\DIAMOND_db_SL.BAK',
+  @filenumber = 1, 
+  @with = 'RECOVERY', 
+  @with = 'NOUNLOAD', 
+  @with = 'STATS = 10', 
+  @with = 'REPLACE',
+  
+  @with='MOVE ''MWT_NEW''		TO ''F:\SQLData\DIAMOND_PRE_PROD.mdf''',
+  @with='MOVE ''MWT_NEW _log''	TO ''G:\SQLData\DIAMOND_PRE_PROD_log.ldf'''
+
+
+
+
+
+
+----------
+
+EXEC master.dbo.xp_restore_database @database = 'Siebel'
+
+
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_01.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_02.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_03.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_04.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_05.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_06.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_07.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_08.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_09.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_10.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_11.BKP' 
+    ,@filename = 'K:\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_12.BKP' 
+
+
+    ,@WITH = 'REPLACE'
+    ,@WITH= 'RECOVERY'
+
+-----------
+
+
+
+
+EXEC master.dbo.xp_restore_database
+@database = 'MLI_DLY_DW',
+@filename = 'J:\SQLDumps\task\MLI_DLY_DW_db_SL.BAK',
+@filenumber = 1, 
+@with = 'RECOVERY', 
+@with = 'NOUNLOAD', 
+@with = 'STATS = 1', 
+@with = 'REPLACE',
+@with='MOVE ''REG_DW_data'' TO ''H:\SQLData$SQL13\DATAREG_DW_data_01.mdf''',
+@with='MOVE ''REG_DW_data10'' TO ''F:\SQLData$SQL13\DATAREG_DW_data10.ndf''',
+@with='MOVE ''REG_DW_data2'' TO ''H:\SQLData$SQL13\DATAREG_DW_data2_Data.NDF''',
+@with='MOVE ''Reg_DW_data3'' TO ''H:\SQLData$SQL13\DATAReg_DW_data3_Data.NDF''',
+@with='MOVE ''REG_DW_data4'' TO ''I:\MSSQL\MSSQL.13\MSSQL\DATAREG_DW_data4_Data.NDF''',
+@with='MOVE ''REG_DW_Data5'' TO ''I:\MSSQL\MSSQL.13\DATAREG_DW_data5_Data.NDF''',
+@with='MOVE ''REG_DW_Data6'' TO ''N:\SQLData$SQL13\DATAREG_DW_data6_Data.NDF''',
+@with='MOVE ''REG_DW_data7'' TO ''I:\MSSQL\MSSQL.13\DATAREG_DW_data7.ndf''',
+@with='MOVE ''REG_DW_data8'' TO ''N:\SQLData$SQL13\DATAREG_DW_data8.ndf''',
+@with='MOVE ''REG_DW_data9'' TO ''K:\SQLData$SQL13\DATAREG_DW_data9.ndf''',
+@with='MOVE ''REG_DW_log'' TO ''N:\SQLData$SQL13\REG_DW_log_01.ldf''',
+@with='MOVE ''REG_DW_log3'' TO ''N:\SQLData$SQL13\REG_DW_log3_Log.LDF'''
+
+--exec master.dbo.xp_restore_filelistonly  @filename = 'J:\SQLDumps\task\MLI_DLY_DW_db_SL.BAK'
+
+
+
+---
+kills
+---- Kill all current connections
+
+DECLARE @cmdKill VARCHAR(50)
+
+DECLARE killCursor CURSOR FOR
+SELECT 'KILL ' + Convert(VARCHAR(5), p.spid)
+FROM master.dbo.sysprocesses AS p
+WHERE p.dbid = db_id('RegDB')
+
+OPEN killCursor
+FETCH killCursor INTO @cmdKill
+
+WHILE 0 = @@fetch_status
+BEGIN
+EXECUTE (@cmdKill) 
+FETCH killCursor INTO @cmdKill
+END
+
+CLOSE killCursor
+DEALLOCATE killCursor 
+
+
+
+--------
+
+
+
+only one table..
+
+jus in case.. 
+
+
+
+
+EXEC master..xp_objectrecovery 
+@FileName = 'G:\MSSQL11.MSSQLSERVER\MSSQL\Backup\MRDM_CS_db_SL_01092014.BAK' 
+,@ObjectName = N'BookMap.DQ_DefectsTracking' 
+,@DestinationDatabase = 'MRDM_CS' 
+,@DestinationTable = N'[BookMap].[temporal_DQ_DefectsTracking]' 
+

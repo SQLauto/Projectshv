@@ -1,0 +1,31 @@
+http://msdn.microsoft.com/en-us/library/ms177410(SQL.90).aspx (http://msdn.microsoft.com/en-us/library/ms177410%28SQL.90%29.aspx)
+
+
+
+
+
+
+create table #temptable(rowid int,colorname varchar(25),Hexa varchar(7)   
+,R tinyint,G tinyint,B tinyint)    
+GO   
+insert into #temptable values(1,'Violet','#8B00FF',139,0,255);   
+insert into #temptable values(2,'Indigo','#4B0082',75,0,130);   
+insert into #temptable values(3,'Blue','#0000FF',0,0,255);   
+insert into #temptable values(4,'Green','#00FF00',0,255,0);   
+insert into #temptable values(5,'Yellow','#FFFF00',255,255,0);   
+insert into #temptable values(6,'Orange','#FFA500',255,165,0);   
+insert into #temptable values(7,'Red','#FF0000',255,0,0);   
+GO   
+select * from #temptable   
+GO  
+
+
+
+
+SELECT rowid,colorname,hexa,rgb,rgbvalue   
+    FROM    
+       (SELECT rowid,colorname,hexa,r,g,b   
+                FROM #temptable) p   
+        UNPIVOT   
+       (rgbvalue FOR rgb IN (r,g,b))   
+    AS unpvt;  

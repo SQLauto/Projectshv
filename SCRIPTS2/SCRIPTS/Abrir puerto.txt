@@ -1,0 +1,1 @@
+netsh firewall set portopening TCP 1433 "SQLServer" 

@@ -1,0 +1,409 @@
+/**********************************************************************************************************************************/
+/***THE APPLICATION ROLES HAS BEEN SCRIPTED WITH P/W AS 'xxxxxxxx' BY DEFAULT; HENCE, SET THE CORRESPONDING P/W BEFORE RUNNING THE SCRIPT***/
+/**********************************************************************************************************************************/
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+USE ReportServer
+GO
+
+-----GRANTING DB ACCESS TO USERS-----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='AMRS\RegGAE_BA_G')
+CREATE USER [AMRS\RegGAE_BA_G] FOR LOGIN [AMRS\RegGAE_BA_G];
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G')
+CREATE USER [EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G] FOR LOGIN [EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G];
+
+-----CREATING DB ROLES-----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='DBDeveloper')
+CREATE ROLE [DBDeveloper] AUTHORIZATION [dbo]
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='RSExecRole')
+CREATE ROLE [RSExecRole] AUTHORIZATION [dbo]
+
+-----ADDING USERS TO DB ROLES-----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXEC sp_addrolemember 'DBDeveloper','EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G'
+EXEC sp_addrolemember 'db_owner','EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G'
+EXEC sp_addrolemember 'db_ddladmin','netiqsa'
+EXEC sp_addrolemember 'db_ddladmin','DBDeveloper'
+EXEC sp_addrolemember 'db_backupoperator','netiqsa'
+EXEC sp_addrolemember 'db_datareader','DBDeveloper'
+EXEC sp_addrolemember 'db_datawriter','DBDeveloper'
+
+--CREATE / BACKUP PERMISSIONS---
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+GRANT CONNECT TO [netiqsa];
+GRANT SHOWPLAN TO [EMEA\EDUBREGGAEWEBDEV-G];
+GRANT CONNECT TO [AMRS\RegGAE_BA_G];
+GRANT EXECUTE TO [DBDeveloper];
+GRANT SHOWPLAN TO [DBDeveloper];
+GRANT VIEW DEFINITION TO [DBDeveloper];
+
+----OBJECT LEVEL PERMISSIONS----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+GRANT DELETE ON [dbo].[CachePolicy] TO [RSExecRole];
+GRANT INSERT ON [dbo].[CachePolicy] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[CachePolicy] TO [RSExecRole];
+GRANT SELECT ON [dbo].[CachePolicy] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[CachePolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateScheduleNextRunTime] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListScheduledReports] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListTasks] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Users] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Users] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Users] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Users] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Users] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListTasksForMaintenance] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ClearScheduleConsistancyFlags] TO [RSExecRole];
+GRANT DELETE ON [dbo].[DataSource] TO [RSExecRole];
+GRANT INSERT ON [dbo].[DataSource] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[DataSource] TO [RSExecRole];
+GRANT SELECT ON [dbo].[DataSource] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[DataSource] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetAReportsReportAction] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetTimeBasedSubscriptionReportAction] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetTaskProperties] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Policies] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Policies] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Policies] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Policies] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Policies] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteTask] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetSchedulesReports] TO [RSExecRole];
+GRANT DELETE ON [dbo].[SecData] TO [RSExecRole];
+GRANT INSERT ON [dbo].[SecData] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[SecData] TO [RSExecRole];
+GRANT SELECT ON [dbo].[SecData] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[SecData] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddReportSchedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[FindObjectsGeneral] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteReportSchedule] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Roles] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Roles] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Roles] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Roles] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Roles] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetSnapShotSchedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateTimeBasedSubscriptionSchedule] TO [RSExecRole];
+GRANT DELETE ON [dbo].[PolicyUserRole] TO [RSExecRole];
+GRANT INSERT ON [dbo].[PolicyUserRole] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[PolicyUserRole] TO [RSExecRole];
+GRANT SELECT ON [dbo].[PolicyUserRole] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[PolicyUserRole] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetTimeBasedSubscriptionSchedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddRunningJob] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[RemoveRunningJob] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateRunningJob] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetMyRunningJobs] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListRunningJobs] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanExpiredJobs] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateObject] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteObject] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[FindObjectsNonRecursive] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[FindObjectsRecursive] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Event] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Event] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Event] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Event] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Event] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[FindObjectsByLink] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetIDPairsByLink] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ExecutionLog] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ExecutionLog] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ExecutionLog] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ExecutionLog] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ExecutionLog] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetChildrenBeforeDelete] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Subscriptions] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Subscriptions] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Subscriptions] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Subscriptions] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Subscriptions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetAllProperties] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetParameters] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetObjectContent] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetCompiledDefinition] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetReportForExecution] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ActiveSubscriptions] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ActiveSubscriptions] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ActiveSubscriptions] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ActiveSubscriptions] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ActiveSubscriptions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetReportParametersForExecution] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[MoveObject] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ObjectExists] TO [RSExecRole];
+GRANT DELETE ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT INSERT ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT SELECT ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetAllProperties] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[FlushReportFromCache] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetParameters] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetObjectContent] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetLastModified] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetNameById] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Notifications] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Notifications] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Notifications] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Notifications] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Notifications] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddDataSource] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetDataSource] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetDataSources] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Batch] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Batch] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Batch] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Batch] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Batch] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteDataSources] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Schedule] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Schedule] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Schedule] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Schedule] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Schedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ChangeStateOfDataSource] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[FindReportsByDataSource] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CopyExecutionSnapshot] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateRole] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ReportSchedule] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ReportSchedule] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ReportSchedule] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ReportSchedule] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ReportSchedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetRoles] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteRole] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ReadRoleProperties] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetRoleProperties] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetPoliciesForRole] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdatePolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetPolicy] TO [RSExecRole];
+GRANT DELETE ON [dbo].[RunningJobs] TO [RSExecRole];
+GRANT INSERT ON [dbo].[RunningJobs] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[RunningJobs] TO [RSExecRole];
+GRANT SELECT ON [dbo].[RunningJobs] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[RunningJobs] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetSystemPolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdatePolicyPrincipal] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdatePolicyRole] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetPolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetSystemPolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeletePolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetSessionData] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[WriteLockSession] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CheckSessionLock] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ReadLockSnapshot] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetSessionData] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetSnapshotFromHistory] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanExpiredSessions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanExpiredCache] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[RemoveReportFromSession] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanBrokenSnapshots] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanOrphanedSnapshots] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetDBVersion] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetCacheOptions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AcceptKey] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetCacheOptions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetAnnouncedKey] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddReportToCache] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetRSKey] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetExecutionOptions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AnnounceOrGetKey] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetExecutionOptions] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteEncryptedContent] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateSnapshot] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteKey] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateChunkAndGetPointer] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetAllConfigurationInfo] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[WriteChunkPortion] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetOneConfigurationInfo] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetChunkPointerAndLength] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetConfigurationInfo] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetChunkInformation] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddEvent] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ReadChunkPortion] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteEvent] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CopyChunksOfType] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanEventRecords] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteSnapshotAndChunks] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddExecutionLogEntry] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteOneChunk] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ExpireExecutionLogEntries] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeletePersistedStreams] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetUserIDBySid] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeletePersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetUserIDByName] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddPersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetUserID] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[LockPersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetPrincipalID] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[WriteFirstPortionPersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[WriteNextPortionPersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeliveryRemovedInactivateSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetFirstPortionPersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetPersistedStreamError] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetNextPortionPersistedStream] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListSubscriptionsUsingDataSource] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateSubscriptionStatus] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[InvalidateSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanNotificationRecords] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateSnapShotNotifications] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateDataDrivenNotification] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateNewActiveSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateActiveSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteActiveSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetAndHoldLockActiveSubscription] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateCacheUpdateNotifications] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetCacheSchedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteNotification] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetNotificationAttempt] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateTimeBasedSubscriptionNotification] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteTimeBasedSubscriptionSchedule] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListUsedDeliveryProviders] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddBatchRecord] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetBatchRecords] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteBatchRecords] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanBatchRecords] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanOrphanedPolicies] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[IncreaseTransientSnapshotRefcount] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DecreaseTransientSnapshotRefcount] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[MarkSnapshotAsDependentOnUser] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[InsertUnreferencedSnapshot] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[AddHistoryRecord] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Keys] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Keys] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Keys] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Keys] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Keys] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[SetHistoryLimit] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[ListHistory] TO [RSExecRole];
+GRANT DELETE ON [dbo].[History] TO [RSExecRole];
+GRANT INSERT ON [dbo].[History] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[History] TO [RSExecRole];
+GRANT SELECT ON [dbo].[History] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[History] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanHistoryForReport] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CleanAllHistories] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteHistoryRecord] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteAllHistoryForReport] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ConfigurationInfo] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ConfigurationInfo] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ConfigurationInfo] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ConfigurationInfo] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ConfigurationInfo] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[DeleteHistoriesWithNoPolicy] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[Get_sqlagent_job_status] TO [RSExecRole];
+GRANT DELETE ON [dbo].[Catalog] TO [RSExecRole];
+GRANT INSERT ON [dbo].[Catalog] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[Catalog] TO [RSExecRole];
+GRANT SELECT ON [dbo].[Catalog] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[Catalog] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[CreateTask] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[UpdateTask] TO [RSExecRole];
+
+----COLUMN LEVEL PERMISSIONS----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**********************************************************************************************************************************/
+/***THE APPLICATION ROLES HAS BEEN SCRIPTED WITH P/W AS 'xxxxxxxx' BY DEFAULT; HENCE, SET THE CORRESPONDING P/W BEFORE RUNNING THE SCRIPT***/
+/**********************************************************************************************************************************/
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+USE ReportServerTempDB
+GO
+
+-----GRANTING DB ACCESS TO USERS-----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='AMRS\RegGAE_BA_G')
+CREATE USER [AMRS\RegGAE_BA_G] FOR LOGIN [AMRS\RegGAE_BA_G];
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G')
+CREATE USER [EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G] FOR LOGIN [EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G];
+
+-----CREATING DB ROLES-----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name ='RSExecRole')
+CREATE ROLE [RSExecRole] AUTHORIZATION [dbo]
+
+-----ADDING USERS TO DB ROLES-----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXEC sp_addrolemember 'db_owner','EMEA\ML_EMEA_EDUBREGGAEWEBDEV-G'
+EXEC sp_addrolemember 'db_ddladmin','netiqsa'
+EXEC sp_addrolemember 'db_backupoperator','netiqsa'
+
+--CREATE / BACKUP PERMISSIONS---
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+GRANT CONNECT TO [netiqsa];
+GRANT SHOWPLAN TO [EMEA\EDUBREGGAEWEBDEV-G];
+GRANT CONNECT TO [AMRS\RegGAE_BA_G];
+
+----OBJECT LEVEL PERMISSIONS----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+GRANT DELETE ON [dbo].[PersistedStream] TO [RSExecRole];
+GRANT INSERT ON [dbo].[PersistedStream] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[PersistedStream] TO [RSExecRole];
+GRANT SELECT ON [dbo].[PersistedStream] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[PersistedStream] TO [RSExecRole];
+GRANT DELETE ON [dbo].[SessionLock] TO [RSExecRole];
+GRANT INSERT ON [dbo].[SessionLock] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[SessionLock] TO [RSExecRole];
+GRANT SELECT ON [dbo].[SessionLock] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[SessionLock] TO [RSExecRole];
+GRANT DELETE ON [dbo].[SessionData] TO [RSExecRole];
+GRANT INSERT ON [dbo].[SessionData] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[SessionData] TO [RSExecRole];
+GRANT SELECT ON [dbo].[SessionData] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[SessionData] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ExecutionCache] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ExecutionCache] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ExecutionCache] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ExecutionCache] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ExecutionCache] TO [RSExecRole];
+GRANT DELETE ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT INSERT ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT SELECT ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[SnapshotData] TO [RSExecRole];
+GRANT DELETE ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT INSERT ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT REFERENCES ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT SELECT ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT UPDATE ON [dbo].[ChunkData] TO [RSExecRole];
+GRANT EXECUTE ON [dbo].[GetDBVersion] TO [RSExecRole];
+
+----COLUMN LEVEL PERMISSIONS----
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+

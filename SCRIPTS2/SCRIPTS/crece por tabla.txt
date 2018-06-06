@@ -1,0 +1,13 @@
+--Set nocount on
+
+CREATE TABLE DummyData
+     (DummyData char (8000) not null)
+
+
+     WHILE  (1=1)
+         BEGIN 
+           INSERT DummyData VALUES ('Fill Data')  -- Because it is a char field it inserts 8000 bytes.
+         END   
+
+
+--drop table DummyData

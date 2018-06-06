@@ -1,0 +1,44 @@
+/* Check status by idx
+By Carlos Elizondo*/use CORE 
+go
+SELECT ps.database_id, ps.OBJECT_ID,OBJECT_NAME(ps.OBJECT_ID) Obj_Name,
+ps.index_id, b.name,
+ps.avg_fragmentation_in_percent
+FROM sys.dm_db_index_physical_stats (DB_ID(), NULL, NULL, NULL, NULL) AS ps
+INNER JOIN sys.indexes AS b ON ps.OBJECT_ID = b.OBJECT_ID
+AND ps.index_id = b.index_id
+WHERE ps.database_id =   DB_ID()
+ORDER BY ps.OBJECT_ID  
+
+
+
+
+
+use REPORTING
+go
+
+SELECT ps.database_id, ps.OBJECT_ID,OBJECT_NAME(ps.OBJECT_ID) Obj_Name,
+ps.index_id, b.name,
+ps.avg_fragmentation_in_percent
+FROM sys.dm_db_index_physical_stats (DB_ID(), NULL, NULL, NULL, NULL) AS ps
+INNER JOIN sys.indexes AS b ON ps.OBJECT_ID = b.OBJECT_ID
+AND ps.index_id = b.index_id
+WHERE ps.database_id =   DB_ID()
+ORDER BY ps.OBJECT_ID  
+
+
+
+
+fragmentation
+
+
+USE rs_epm;
+GO
+SELECT a.index_id, name, cast(Round(avg_fragmentation_in_percent,2) AS varchar(10))+'%'
+
+FROM sys.dm_db_index_physical_stats (DB_ID(N'rs_epm'), OBJECT_ID(N'dbo.tb_DNI_AttrVal'), NULL, NULL, NULL) AS a
+    JOIN sys.indexes AS b ON a.object_id = b.object_id AND a.index_id = b.index_id; 
+GO
+
+
+ 

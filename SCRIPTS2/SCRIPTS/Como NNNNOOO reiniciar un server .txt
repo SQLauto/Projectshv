@@ -1,0 +1,11 @@
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager 
+la llave es PendingFileRenameOperations 
+
+
+Rename the "PendingFileRenameOperations" value to "PendingFileRenameOperations2"
+
+
+
+para la llave
+
+EN la carpeta x64 (o la arquitectura que sea) figuar un archivo que se llama DefaultSetup.ini

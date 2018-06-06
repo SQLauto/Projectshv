@@ -1,0 +1,232 @@
+Text
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[sp_ScriptDynamicPermissions]
+AS
+BEGIN
+
+	-- DELETE WORKTABLE
+	DELETE FROM DEFSDBA..PERMISSIONSRESTORELOG
+
+	-- NUMBER THIS ITERATION
+	DECLARE @ITERATION as varchar(20)
+	DECLARE @ITERATIONTYPE as varchar(20)
+	SET @ITERATION = (SELECT ISNULL(MAX(ITERATION),0) + 1 FROM DEFSDBA..DynamicPermissions)
+    SET @ITERATIONTYPE = 'BACKUP'
+
+	-- DELETE OLD FILES, AS WE DON'T KEEP HISTORY
+	DECLARE @cmddel nvarchar(4000)
+	set @cmddel = 'DEL F:\TESTEnvironment\Permissions\Dynamic*.sql /f/q' 
+	exec master..xp_cmdshell @cmddel
+	
+	-- BUILD CURSOR TO EXTRACT PERMISSIONS
+	DECLARE @CURRENT_DBNAME nvarchar(128)
+	DECLARE @LAST_DBNAME nvarchar(128)
+	DECLARE @BACKED varchar(50)
+
+	SET @CURRENT_DBNAME  = '' -- FIRST DBNAME IS EMPTY.
+	SET @LAST_DBNAME  = '' -- FIRST DBNAME IS EMPTY.
+
+	WHILE (@CURRENT_DBNAME IS NOT NULL)
+	BEGIN -- LOOP
+
+		-- GET THE NEXT DBNAME TO SCRIPT PERMISSIONS FROM
+		SET @CURRENT_DBNAME  = (SELECT ISNULL(MIN(NAME),'') FROM master..sysdatabases WHERE NAME not in('master','model','msdb','tempdb') AND NAME > @LAST_DBNAME)
+
+		IF (@CURRENT_DBNAME = '')
+			BEGIN
+				SET @CURRENT_DBNAME = NULL
+			END
+		ELSE
+			BEGIN -- SCRIPTING
+
+				EXEC( 'USE ['+@CURRENT_DBNAME+']
+				SET NOCOUNT ON
+				---------------------PERMISSIONS FROM SQL---------------------------
+				-------------By Eduardo Saenz And Carlos Elizondo     --------------
+				--------------------------------------------------------------------
+
+				-- CREATE ADDITIONAL VARIABLES
+
+				Declare @CountID as [Varchar](5)
+				Declare @dbNamedb as [Varchar](80)
+				Declare @Iteration as varchar(20)
+				Declare @Iterationtype as varchar(20)
+				Set @dbNamedb =db_name()
+				SET @Iteration = '+@ITERATION+'
+				SET @Iterationtype = '''+@ITERATIONTYPE+'''
+
+				------ BEGINING OF PERMISSION SCRIPTING SCRIPT (BY JULIO ESCOBEDO)
+
+					---------Insert USE
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)
+					--------------------------------------- 
+					SELECT ltrim(rtrim(@dbNamedb)),	''USE'' + SPACE(1) + QUOTENAME(DB_NAME()) AS ''--Database Context''
+						, @ITERATION, @ITERATIONTYPE
+
+					---------Insert Schemas
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)
+					--------------------------------------- 
+
+						SELECT ltrim(rtrim(@dbNamedb)),
+						''if exists(select * from sys.schemas where name = '''''' + s.name + '''''')
+							ALTER AUTHORIZATION ON SCHEMA::'' + QUOTENAME(s.name) + '' TO [dbo]
+						else
+							EXEC('' + CHAR(39) + '' CREATE SCHEMA '' + QUOTENAME(s.name) + '' AUTHORIZATION [dbo] '' + CHAR(39) + '')''
+						+ CHAR(13) + CHAR(10) + '';'' + CHAR(13) + CHAR(10)
+						, @ITERATION, @ITERATIONTYPE
+						from sys.schemas s
+						inner join sys.database_principals as rl on s.principal_id=rl.principal_id
+						where 
+						(
+							((rl.type = ''R'') and (CAST(CASE WHEN rl.principal_id > 16383 AND rl.principal_id < 16400 THEN 1 ELSE 0 END AS bit)=0 and rl.name<>N''public'') )
+						Or 
+							((rl.type in (''U'', ''S'', ''G'', ''C'', ''K'')) and CAST(CASE WHEN rl.principal_id < 5 OR rl.principal_id = 16382 OR rl.principal_id = 16383 THEN 1 ELSE 0 END AS bit)=0)
+						) and rl.principal_id not in (select principal_id from sys.database_principals where type in (''U'',''G'') and suser_sname(sid) is null and name != ''dbo'')
+
+					------------------- Script Roles------
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)
+					---------------------------------------
+						SELECT ltrim(rtrim(@dbNamedb)),
+						''IF  EXISTS (SELECT * FROM sys.database_principals WHERE name = N'' + quotename(rl.name,'''''''') + '' AND type = ''''R'''')
+						DROP ROLE '' + quotename(rl.name) + ''
+						;
+						CREATE ROLE '' + quotename(rl.name) + ''
+						;'' AS ''--Roles''
+						---''Server[@Name='' + quotename(CAST(serverproperty(N''Servername'') AS sysname),'''''''') + '']'' + ''/Database[@Name='' + quotename(db_name(),'''''''') + '']'' + ''/Role[@Name='' + quotename(rl.name,'''''''') + '']'' AS [Urn],rl.name AS [Name] 
+						, @ITERATION, @ITERATIONTYPE
+						FROM sys.database_principals AS rl
+						WHERE (rl.type = ''R'') and (CAST(CASE WHEN rl.principal_id > 16383 AND rl.principal_id < 16400 THEN 1 ELSE 0 END AS bit)=0 and rl.name<>N''public'')
+						ORDER BY[Name] ASC
+
+
+					--------Script User--------------------
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)					 
+					---------------------------------------
+
+
+						SELECT ltrim(rtrim(@dbNamedb)),
+						Case When u.name= u.default_schema_name Then ''ALTER AUTHORIZATION ON SCHEMA::'' + QUOTENAME(u.default_schema_name) + '' TO [dbo]''
+						+ CHAR(13) + CHAR(10) + '';'' + CHAR(13) + CHAR(10) Else '''' End +
+						''IF  EXISTS (SELECT * FROM sys.database_principals WHERE name = N'''''' +  u.name + '''''')
+							DROP USER '' + QUOTENAME(u.name) + CHAR(13) + CHAR(10) + '';'' + CHAR(13) + CHAR(10) +
+						''CREATE USER '' + QUOTENAME(u.name) + '' '' +
+						Case When suser_sname(u.sid) is null Then '''' Else ''FOR LOGIN '' + QUOTENAME(suser_sname(u.sid) ) End +
+						Case When cert.name is null Then '''' Else ''FOR CERTIFICATE '' + QUOTENAME(cert.name) End + 
+						CAse When ak.name is null Then '''' Else ''FOR ASYMMETRIC KEY '' + QUOTENAME(ak.name) End + 
+						CAse When suser_sname(u.sid) is null  and cert.name is null and ak.name is null Then ''WITHOUT LOGIN '' Else '''' End + 
+						Case When u.default_schema_name is null Then '''' Else '' WITH DEFAULT_SCHEMA='' + QUOTENAME(u.default_schema_name) End +
+						CHAR(13) + CHAR(10) + '';'' + CHAR(13) + CHAR(10) +
+						Case When u.name= u.default_schema_name Then ''ALTER AUTHORIZATION ON SCHEMA::'' + QUOTENAME(u.default_schema_name) + '' TO '' + QUOTENAME(u.name) + CHAR(13) + CHAR(10) + '';'' + CHAR(13) + CHAR(10)  Else '''' End 
+						AS ''--Users''
+						/*
+						u.name AS [Name],
+						u.principal_id AS [ID],
+						ISNULL(suser_sname(u.sid),N'''') AS [Login],
+						CAST(CASE WHEN u.principal_id < 5 OR u.principal_id = 16382 OR u.principal_id = 16383 THEN 1 ELSE 0 END AS bit) AS [IsSystemObject],
+						CASE WHEN N''U'' = u.type THEN 0 WHEN N''G'' = u.type THEN 1 WHEN N''S'' = u.type THEN 2 WHEN N''C'' = u.type THEN 3 WHEN N''K'' = u.type THEN 4 END AS [LoginType],
+						CAST(CASE dp.state WHEN N''G'' THEN 1 WHEN ''W'' THEN 1 ELSE 0 END AS bit) AS [HasDBAccess],
+						u.sid AS [Sid],
+						CASE WHEN N''C'' = u.type THEN 1 WHEN N''K'' = u.type THEN 2 WHEN N''S'' = u.type AND suser_sname(u.sid) IS NULL THEN 3 ELSE 0 END AS [UserType],
+						ISNULL(cert.name,N'''') AS [Certificate],
+						ISNULL(ak.name,N'''') AS [AsymmetricKey],
+						u.create_date AS [CreateDate],
+						u.modify_date AS [DateLastModified],
+						ISNULL(u.default_schema_name,N'''') AS [DefaultSchema]
+						*/
+						, @ITERATION, @ITERATIONTYPE
+						FROM
+						sys.database_principals AS u
+						LEFT OUTER JOIN sys.database_permissions AS dp ON dp.grantee_principal_id = u.principal_id and dp.type = N''CO''
+						LEFT OUTER JOIN sys.certificates AS cert ON cert.sid = u.sid
+						LEFT OUTER JOIN sys.asymmetric_keys AS ak ON ak.sid = u.sid
+						WHERE
+						(u.type in (''U'', ''S'', ''G'', ''C'', ''K'')) and CAST(CASE WHEN u.principal_id < 5 OR u.principal_id = 16382 OR u.principal_id = 16383 THEN 1 ELSE 0 END AS bit)=0
+
+
+					---------------------------------------
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)					 
+					--------------------------------------
+
+						SELECT	ltrim(rtrim(@dbNamedb)), ''EXEC sp_addrolemember @rolename ='' 
+							+ SPACE(1) + QUOTENAME(USER_NAME(rm.role_principal_id), '''''''') + '', @membername ='' + SPACE(1) + QUOTENAME(USER_NAME(rm.member_principal_id), '''''''') AS ''--Role Memberships''
+						, @ITERATION, @ITERATIONTYPE
+						FROM	sys.database_role_members AS rm
+						---WHERE	USER_NAME(rm.member_principal_id) = @OldUser
+						ORDER BY rm.role_principal_id ASC
+
+
+					---------------------------------------
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)
+					---------------------------------------
+						SELECT ltrim(rtrim(@dbNamedb)),	CASE WHEN perm.state <> ''W'' THEN perm.state_desc ELSE ''GRANT'' END
+							+ SPACE(1) + perm.permission_name 
+							+ CASE WHEN cl.column_id IS NULL THEN SPACE(0) ELSE '' ('' + QUOTENAME(cl.name) + '')'' END
+							+ SPACE(1) + ''ON '' + QUOTENAME(USER_NAME(obj.schema_id)) + ''.'' + QUOTENAME(obj.name) 
+							+ SPACE(1) + ''TO'' + SPACE(1) + QUOTENAME(usr.name) COLLATE database_default
+							+ CASE WHEN perm.state <> ''W'' THEN SPACE(0) ELSE SPACE(1) + ''WITH GRANT OPTION'' END AS ''--Object Level Permissions''
+						, @ITERATION, @ITERATIONTYPE
+						FROM	sys.database_permissions AS perm
+							INNER JOIN
+							sys.objects AS obj
+							ON perm.major_id = obj.[object_id]
+							INNER JOIN
+							sys.database_principals AS usr
+							ON perm.grantee_principal_id = usr.principal_id
+							LEFT JOIN
+							sys.columns AS cl
+							ON cl.column_id = perm.minor_id AND cl.[object_id] = perm.major_id
+						---WHERE	usr.name = @OldUser
+						ORDER BY perm.permission_name ASC, perm.state_desc ASC
+
+					---------------------------------------
+						Insert into DEFSDBA..DynamicPermissions (dbname, msj, iteration, iterationtype)
+					--------------------------------------
+
+						SELECT	ltrim(rtrim(@dbNamedb)), CASE WHEN perm.state <> ''W'' THEN perm.state_desc ELSE ''GRANT'' END
+							+ SPACE(1) + perm.permission_name + SPACE(1)
+							+ SPACE(1) + ''TO'' + SPACE(1) + QUOTENAME(usr.name) COLLATE database_default
+							+ CASE WHEN perm.state <> ''W'' THEN SPACE(0) ELSE SPACE(1) + ''WITH GRANT OPTION'' END AS ''--Database Level Permissions''
+						, @ITERATION, @ITERATIONTYPE
+						FROM	sys.database_permissions AS perm
+							INNER JOIN
+							sys.database_principals AS usr
+							ON perm.grantee_principal_id = usr.principal_id
+						---WHERE	usr.name = @OldUser
+						AND	perm.major_id = 0
+						ORDER BY perm.permission_name ASC, perm.state_desc ASC
+
+
+				------ END OF PERMISSION SCRIPTING SCRIPT (BY JULIO ESCOBEDO)
+
+				----- OUTPUT TO DISK WRITTER
+
+				Declare @dbNamedb1 as [Varchar](8000)
+
+				Set @dbNamedb1 = replace( replace (QUOTENAME(DB_NAME()),''['',''''),'']'','''')
+				DECLARE @FileName varchar(8000),
+						@bcpCommand varchar(8000)
+
+				SET @FileName = REPLACE(''F:\TESTEnvironment\Permissions\Dynamic_''+@dbNamedb1+''.sql'',''/'',''-'')
+
+				SET @bcpCommand = ''bcp "SELECT msj FROM DEFSDBA..DynamicPermissions Where dbname = ''''''+@dbNamedb+'''''' AND Iteration = ''''''+@ITERATION+'''''' AND IterationType = ''''BACKUP'''' ORDER BY id" queryout "''
+				SET @bcpCommand = @bcpCommand + @FileName + ''" -SPHLGMSSQLT01 -T -c''
+
+				-- EXPORT PERMISSIONS TO FILE.
+				EXEC master..xp_cmdshell @bcpCommand
+
+				')
+
+				-- INSERT INTO PERMISSIONS RESTORE LOG THE LAST EVENT
+				SET @BACKED = (Select count(*) from DEFSDBA..DynamicPermissions WHERE DBNAME = @CURRENT_DBNAME AND msj like 'GRANT%' AND Iteration = @Iteration AND IterationType = @IterationType )
+				INSERT DEFSDBA..PERMISSIONSRESTORELOG VALUES (@@SERVERNAME, @CURRENT_DBNAME, convert (varchar(30),getdate(),101), NULL, @BACKED, 0, 'SCRIPTED')
+
+				-- UPDATE LAST DBNAME
+				SET @LAST_DBNAME = @CURRENT_DBNAME
+
+			END -- SCRIPTING
+
+	END -- END LOOP
+
+END
+

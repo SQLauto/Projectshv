@@ -1,0 +1,61 @@
+Arturo Galvan: /****** Object:  StoredProcedure [dbo].[sp_grant_permissions]    Script Date: 04/19/2011 10:36:47 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+create  procedure [dbo].[sp_grant_permissions] 
+(@p_user_group sysname)
+
+As
+
+--*****************************************************************************
+
+-- This procedure will reapply all permissions for the database.
+
+--   sp_grant_permissions 'GHOSR_WebApp'
+
+--*****************************************************************************
+
+Set nocount on 
+
+Declare c_objects Cursor For
+  Select type, name 
+  From   sysobjects
+  Where  type in ('U', 'V', 'P', 'FN')
+  And    uid = USER_ID('DBO')
+  Order  By type, name
+Declare @name sysname, @type char(2), @sql varchar(2000)
+
+Open c_objects
+Fetch Next From c_objects Into @type, @name
+
+While (@@Fetch_Status = 0)
+  Begin
+    If @type in ('P', 'FN') /* Stored Procedures or Function */
+      Begin
+		 if LEFT(@name,3) <> 'sp_' and LEFT(@name,3) <> 'fn_'
+            begin
+              Set @sql = 'Grant Execute on [' + @name + '] to [' + @p_user_group + ']'
+                 Print @sql
+                 Exec(@sql)
+	        end
+      End
+
+    Else /* View or Table */
+      Begin
+		if @name <> 'sysdiagrams'
+		    Begin
+				Set @sql = 'Grant Select, Insert, Update, Delete on [' + @name + '] to [' + + @p_user_group + ']'
+				Print @sql
+				Exec(@sql)
+            End
+      End
+
+    Fetch Next From c_objects Into @type, @name
+    End
+
+Close c_objects
+Deallocate c_objects
+
+Return

@@ -1,0 +1,31 @@
+
+--YA MENOS 1
+
+
+
+
+
+
+DBCC CHECKIDENT ( 'Almacen', RESEED, 0 )
+DBCC CHECKIDENT ( 'Clasificacion', RESEED, 0)
+DBCC CHECKIDENT ( 'Familias', RESEED, 0)
+DBCC CHECKIDENT ( 'Marca', RESEED, 0)
+DBCC CHECKIDENT ( 'Herramientas', RESEED, 1408)
+DBCC CHECKIDENT ( 'Inventario', RESEED, 31)
+DBCC CHECKIDENT ( 'ListaPM', RESEED, 0)
+DBCC CHECKIDENT ( 'localizacion', RESEED, 0)
+DBCC CHECKIDENT ( 'Mantenimiento', RESEED, 0)
+DBCC CHECKIDENT ( 'Modelo', RESEED, 0)
+DBCC CHECKIDENT ( 'Prestamos', RESEED, 17)
+DBCC CHECKIDENT ( 'Proveedor_Mantenimiento', RESEED, 0)
+DBCC CHECKIDENT ( 'Resguardo', RESEED, 961)
+DBCC CHECKIDENT ( 'roles', RESEED, 0)
+
+para verlo 		Tabla
+
+DBCC CHECKIDENT ('Person.AddressType', NORESEED)
+ 
+
+
+Para setearlo a el ultimo si se necesita
+DBCC CHECKIDENT ('Person.AddressType')

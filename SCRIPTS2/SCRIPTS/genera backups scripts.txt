@@ -1,0 +1,72 @@
+create table #temp
+(Id varchar(8000))
+
+--drop table #temp
+
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_Servlet') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('Dx0135_TAXGIS') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('DX0135_TAXJOURN') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_TPS') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('Dx0135_VERTEXREPORTING') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('DX0230_SAUTR_STAGE') 
+Insert into #temp Values ('Vertex60') 
+Insert into #temp Values ('Vertex60') 
+
+
+SELECT 'BACKUP DATABASE ['+ID+'] TO  DISK = N''m:\123.bak''
+WITH NOFORMAT, NOINIT,  NAME = N'''+ID+'-Full Database Backup'',  STATS = 1
+GO' FROM #TEMP 
+
+
+
+
+gROUP BY ID

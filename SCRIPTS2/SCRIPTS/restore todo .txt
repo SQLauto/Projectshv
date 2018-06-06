@@ -1,0 +1,206 @@
+SET QUOTED_IDENTIFIER OFF
+GO
+SET ANSI_NULLS ON
+GO
+create procedure usp_build_restore_script
+as
+--
+-- This stored procedure was written by Greg Larsen for Washington State Department ofHealth.
+-- Date: 12/16/2001
+--
+-- Description:
+-- This stored procedure generates TSQL script that will restore all the databases
+-- on the current SQL Server. This stored procedure takes into account when the last
+-- full and differential backups where taken, and how many transaction log backups
+-- have been taken since the last database backup, based on the information in
+-- the msdb database.
+--
+-- Modified:
+-- 11/30/2005 - Modified code to support two different databases being backed up in less than one
+-- second. Bug found by: Viktor Placek
+--
+-- Declare variables used in SP
+declare @cmd nvarchar (1000)
+declare @cmd1 nvarchar (1000)
+declare @db nvarchar(128)
+declare @filename nvarchar(128)
+declare @cnt int
+declare @num_processed int
+declare @name nvarchar(128)
+declare @physical_device_name nvarchar(128)
+declare @backup_start_date datetime
+declare @type char(1)
+-- Turn off the row number message
+set nocount on
+-- SECTION 1 ----------------------------------------------
+-- Define cursor to hold all the different databases for the restore script will be built
+declare db cursor for
+select name from master..sysdatabases
+where name not in ('tempdb')
+
+-- Create a global temporary table that will hold the name of the backup, the database name, and the type of database backup.
+create table ##backupnames (
+name nvarchar(100),
+database_name nvarchar(100),
+type char(1) )
+-- Open cursor containing list of database names.
+open db
+fetch next from db into @db
+-- Process until no more databases are left
+WHILE @@FETCH_STATUS = 0
+BEGIN
+-- Subsection 1A --------------------------------------------
+-- initialize the physical device name
+set @physical_device_name = ''
+-- get the name of the last full database backup
+select @physical_device_name = physical_device_name , @backup_start_date =
+backup_start_date
+from msdb..backupset a join msdb..backupmediaset b on a.media_set_id =
+b.media_set_id
+join msdb..backupmediafamily c on a.media_set_id = c.media_set_id
+where @db = database_name and type='d' and backup_start_date =
+(select top 1 backup_start_date from msdb..backupset
+where @db = database_name and type = 'd'
+order by backup_start_date desc)
+-- Did a full database backup name get found
+if @physical_device_name <> ''
+begin
+-- Build command to place a record in table that holds backup names
+select @cmd = 'insert into ##backupnames values (' + char(39) +
+@physical_device_name + char(39) + ',' + char(39) + @db + char(39) + ',' +
+char(39) + 'd' + char(39)+ ')'
+-- Execute command to place a record in table that holds backup names
+exec sp_executesql @cmd
+end
+-- Subsection 1B --------------------------------------------
+-- Reset the physical device name
+set @physical_device_name = ''
+-- Find the last differential database backup
+select @physical_device_name = physical_device_name, @backup_start_date =
+backup_start_date
+
+from msdb..backupset a join msdb..backupmediaset b on a.media_set_id =
+b.media_set_id
+join msdb..backupmediafamily c on a.media_set_id = c.media_set_id
+where @db = database_name and type='i' and backup_start_date =
+(select top 1 backup_start_date from msdb..backupset
+where @db = database_name and type = 'I' and backup_start_date >
+@backup_start_date
+order by backup_start_date desc)
+-- Did a differential bafckup name get found
+if @physical_device_name <> ''
+begin
+-- Build command to place a record in table that holds backup names
+select @cmd = 'insert into ##backupnames values (' + char(39) +
+@physical_device_name + char(39) + ',' + char(39) + @db + char(39) + ',' +
+char(39) + 'i' + char(39)+ ')'
+-- Execute command to place a record in table that holds backup names
+exec sp_executesql @cmd
+end
+-- Subsection 1C --------------------------------------------
+-- Build command to place records in table to hold backup names for all
+-- transaction log backups from the last database backup
+set @CMD = 'insert into ##backupnames select physical_device_name,' + char(39) +
+@db + char(39) +
+',' + char(39) + 'l' + char(39) +
+'from msdb..backupset a join msdb..backupmediaset b on a.media_set_id =
+b.media_set_id join ' +
+'msdb..backupmediafamily c on a.media_set_id = c.media_set_id ' +
+'where type=' + char(39) + 'l' + char(39) + 'and backup_start_date >
+@backup_start_dat and' +
+char(39) + @db + char(39) + ' = database_name order by backup_start_date'
+-- Execute command to place records in table to hold backup names
+-- for all transaction log backups from the last database backup
+exec sp_executesql @cmd,@params=N'@backup_start_dat datetime', @backup_start_dat
+= @backup_start_date
+-- get next database to process
+fetch next from db into @db
+end
+-- close
+close db
+-- Section B ----------------------------------------------
+open db
+-- Get first recod from database list cursor
+fetch next from db into @db
+-- Generate Heading in Restore script
+print '-- Restore All databases'
+
+-- Process all databases
+WHILE @@FETCH_STATUS = 0
+BEGIN
+-- define cursor for all database and log backups for specific database being processed
+declare backup_name cursor for
+select name,type from ##backupnames where database_name = @DB
+-- Open cursor containing list of database backups for specific database being processed
+open backup_name
+-- Determine the number of different backups available for specific database being processed
+select @CNT = count(*) from ##backupnames where database_name = @DB
+-- Get first database backup for specific database being processed
+fetch next from backup_name into @physical_device_name, @type
+-- Set counter to track the number of backups processed
+set @NUM_PROCESSED = 0
+-- Process until no more database backups exist for specific database being processed
+WHILE @@FETCH_STATUS = 0
+BEGIN
+-- Increment the counter to track the number of backups processed
+set @NUM_PROCESSED = @NUM_PROCESSED + 1
+-- Is the number of database backup processed the same as the number of different backups
+-- available for specific database being processed?
+if @CNT = @NUM_PROCESSED
+-- If so, is the type of backup currently being processed a transaction log backup?
+if @TYPE = 'l'
+-- build restore command to restore the last transaction log
+select @cmd = 'restore log ' + rtrim(@db) + char(13) +
+' from disk = ' + char(39) +
+rtrim(substring(@physical_device_name,1,len(@physical_device_name))) +
+char(39) + char(13) + ' with replace'
+else
+-- Last backup was not a transaction log backup
+-- Build restore command to restore the last database backup
+select @cmd = 'restore database ' + rtrim(@db) + char(13) +
+' from disk = ' + char(39) +
+rtrim(substring(@physical_device_name,1,len(@physical_device_name))) +
+char(39) + char(13) + ' with replace'
+else
+-- Current backup is not the last backup
+-- Is the current backup being processed a transaction log backup?
+if @TYPE = 'l'
+-- Build restore command to restore the current transaction backup, with no recovery
+select @cmd = 'restore log ' + rtrim(@db) + char(13) +
+' from disk = ' + char(39) +
+
+rtrim(substring(@physical_device_name,1,len(@physical_device_name))) +
+char(39) + char(13) + ' with replace, norecovery'
+else
+-- Current backup being processed is not a transaction log backup
+-- Build restore command to restore the currrent database backup, with no recovery
+select @cmd = 'restore database ' + rtrim(@db) + char(13) +
+' from disk = ' + char(39) +
+rtrim(substring(@physical_device_name,1,len(@physical_device_name))) +
+char(39) + char(13) + ' with replace, norecovery'
+-- if it is master comment line out
+if @db = 'master'
+set @cmd = '/* ' + char(13) + @cmd + char(13) + '*/'
+-- Generate the restore command and other commands for restore script
+print @cmd
+print 'go'
+print ' '
+-- Get next database backup to process
+fetch next from backup_name into @physical_device_name, @type
+end
+-- Close and deallocate database backup name cursor for current database beingprocessed
+close backup_name
+deallocate backup_name
+-- Get next database to process
+fetch next from db into @db
+end
+-- Close and deallocate cursor containing list of databases to process
+close db
+deallocate db
+-- Drop global temporary table
+drop table ##backupnames
+GO
+SET QUOTED_IDENTIFIER OFF
+GO
+SET ANSI_NULLS ON
+GO

@@ -1,0 +1,55 @@
+DMVs are very useful in diagnosing different SQL performance problems.  In general, you will find great resources for looking into any of the following: 
+
+Resource Bottlenecks 
+	CPU 
+	Memory 
+	I/O
+TempDB Bottlenecks 
+	Slow Queries 
+	Bad Plans 
+	Missing Indexes 
+	Blocking
+Index Fragmentation
+
+
+
+Here is a good list of the Naming Conventions of the DMVs that are available:
+
+CLR Related 
+	dm_clr_
+Database Related 
+	dm_db_
+Execution Related 
+	dm_exec_
+Full Text Search Related 
+	dm_fts_
+Index Related 
+	dm_db_index_ 
+	dm_missing_index_
+SQL OS Related 
+	dm_os_
+I/O Related 
+	dm_io_
+Query Notifications Related 
+	dm_qn_
+Replication Related 
+	dm_repl_
+Service Broker Related 
+	dm_broker_
+Transaction Related 
+	dm_tran_
+
+
+
+Main DMVs of interest:
+
+dm_exec_query_stats – performance stats of all queries 
+dm_exec_sql_text – returns exact sql for entire batch given a sql handle 
+dm_exec_query_plan – return query plan for entire batch given a plan handle 
+dm_db_index_usage_stats – displays how often each index is used, show Read Seeks, Read Scans, Write Seeks and Write Scans 
+dm_db_index_physical_stats – replace DBCC SHOWCONTIG used to check index fragmentation 
+dm_db_index_operational_stats – use to check for index contention and blocking 
+dm_os_wait_stats – Used to determine the types of waits (signal or resource that are occurring) 
+dm_os_waiting_tasks – Used to help identify blocking 
+dm_tran_locks – Used to help indentify blocking 
+dm_os_performance_counters – Query Access to SQL Server Performance counters

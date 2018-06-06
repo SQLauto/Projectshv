@@ -1,0 +1,756 @@
+USE [TEST4]
+GO
+/****** Object:  StoredProcedure [dbo].[Tst4Reports]    Script Date: 04/30/2013 13:36:37 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Carlos F Elizondo
+-- Description:	Create  different countes to find commun issues 
+-- Test SP: Exec Tst4Reports 4,'mptelcsas200' 	 
+-- Test SP: Exec Tst4Reports 4
+-- More Info Exec Tst4Reports 50	 
+-- =============================================
+
+
+ALTER PROCEDURE [dbo].[Tst4Reports] 
+/**-* 
+	Exec Tst4Reports1
+	Exec Tst4Reports 0
+OR	
+	Exec Tst4Reports1
+	Exec Tst4Reports 1
+	Exec Tst4Reports 2
+	Exec Tst4Reports 3
+	Exec Tst4Reports 4,'MPTELCSAS200'
+	Exec Tst4Reports 4,
+	Exec Tst4Reports 5
+	Exec Tst4Reports 7
+
+*/
+	@Param1 int,
+	@Servername varchar (80) = null
+	AS
+BEGIN
+
+
+
+	if @Param1= 0
+	BEGIN
+
+	Exec Tst4Reports1
+	print'Alter table .. Done'	
+		
+	Exec Tst4Reports 2
+		print'sort info.. Done'	
+		
+	Exec Tst4Reports 3
+		print'Place info into temporals.. Done'
+		
+	Exec Tst4Reports 4
+
+	
+eND
+	
+	if @Param1= 1
+	BEGIN
+
+			ALTER TABLE dbo.IncidentReportJan ADD
+				Type nchar(50) NULL
+			ALTER TABLE dbo.IncidentReportJan SET (LOCK_ESCALATION = TABLE)
+			Print 'IncidentReportJan Updated'
+
+	
+	
+	end-- Alter table
+	
+	if @Param1= 2
+	BEGIN
+
+
+			--select * from dbo.IncidentReportJan
+			-----------
+
+			
+			----------
+
+			--select * from dbo.IncidentReportJan
+			--where Incident#Summary Like'%Long%'
+			--And TYPE is null
+
+			--
+			--Update IncidentReportJan
+			--Set Type= null
+			---
+			Update IncidentReportJan
+			Set Type='Collection'
+			where Incident#Summary Like'%Age%'
+			And TYPE is  null
+			
+
+
+			Update IncidentReportJan
+			Set Type='Cluster'
+			where Incident#Summary Like'%Clu%'
+			And TYPE is  null
+			
+
+
+			Update IncidentReportJan
+			Set Type='Disconected'
+			where Incident#Summary Like'%disc%'
+			And TYPE is  null
+			
+
+
+
+
+			--Update IncidentReportJan
+			--Set Type=''
+			--where Incident#Summary Like'%disk%'
+			--And TYPE is  null
+			
+
+
+
+
+			Update IncidentReportJan
+			Set Type='Error Log'
+			where (Incident#Summary Like'%log%'
+			Or Incident#Summary Like'%err%')
+			And TYPE is null
+			
+
+			Update IncidentReportJan
+			Set Type='Fixed'
+			where Incident#Summary Like'%Fix%'
+			And TYPE is  null
+			
+
+
+
+			Update IncidentReportJan
+			Set Type='Job Fails'
+			where Incident#Summary Like'%Job%'
+			And TYPE is  null
+			
+
+
+			Update IncidentReportJan
+			Set Type='Log Shipping'
+			where Incident#Summary Like'%Log S%'
+			
+
+
+			Update IncidentReportJan
+			Set Type='Long Lock'
+			where Incident#Summary Like'%Long%'
+			And TYPE is  null
+			
+
+			Update IncidentReportJan
+			Set Type='Mirror'
+			where Incident#Summary Like'%mir%'
+			And TYPE is  null
+			
+
+
+			Update IncidentReportJan
+			Set Type='Percent full'
+			--Select * from IncidentReportJan
+			where Incident#Summary Like'%full%'
+			
+
+			Update IncidentReportJan
+			Set Type='Replication'
+			--Select * from IncidentReportJan
+			where Incident#Summary Like'%Rep%'
+			And TYPE is  null
+			
+
+			Update IncidentReportJan
+			Set Type='SQL SERVER'
+			--Select * from IncidentReportJan
+			where Incident#Summary Like'%SQL Server%'
+			And TYPE is  null
+			
+
+
+			Update IncidentReportJan
+			Set Type='Threads'
+			--Select * from IncidentReportJan
+			where Incident#Summary Like'%Thr%'
+			And TYPE is  null
+
+
+
+
+			Update IncidentReportJan
+			Set Type='Usability'
+			--Select * from IncidentReportJan
+			where Incident#Summary Like'%Us%'
+			And TYPE is  null
+			
+
+			Update IncidentReportJan
+			Set Type='SQL SERVER'
+			--Select * from IncidentReportJan
+			where Incident#Summary Like'%SQL Server%'
+			And TYPE is  null
+			
+			Update IncidentReportJan
+			Set Type='Request'
+			--Select * from IncidentReportJan
+			where Incident#Summary like '%deletion%'
+			and type is null
+
+
+			Update IncidentReportJan
+			Set Type='Percent full'
+			--Select * from IncidentReportJan
+			where Incident#Summary like '%Disk%'
+			and type =''
+
+
+
+			-----last
+			Update IncidentReportJan
+			Set Type='N.E.I.'
+			--Select * from IncidentReportJan
+			where Incident#Summary like '%bof%'
+			and type is null
+
+			
+			Update IncidentReportJan
+			Set Type='N.E.I.'
+			--Select * from IncidentReportJan
+			where Incident#Summary like '%dbss%'
+			and type is null
+
+			
+			Update IncidentReportJan
+			Set Type='N.E.I.'
+			--Select * from IncidentReportJan
+			where Incident#Summary like '%d'
+			and type is null
+
+
+
+			Update IncidentReportJan
+			Set Type='N.E.I.'
+			--Select * from IncidentReportJan
+			where type is null
+	
+		Update IncidentReportJan
+		Set Type='Collection'
+		--	Select * from IncidentReportJan
+				where Incident#Summary like '%col%'
+		
+--select * from dbo.temporalIncidentReportJan1
+--where servernames =''
+
+
+
+			--select * Into #temporal from IncidentReportJan
+
+		Update IncidentReportJan
+			Set Type='Collection'
+--			Select * from IncidentReportJan
+			where TYPE='N.E.I.'
+			And Incident#Summary like '%col%'
+			
+			
+		Update IncidentReportJan
+			Set Type='N.E.I. FATAL'
+--			Select * from IncidentReportJan
+			where Type='N.E.I.'			
+			and Incident#Summary like '%fatal%'
+			
+	 	
+	
+		Update IncidentReportJan
+			Set Type='Percent full'
+			--Select * from IncidentReportJan
+				where Type='N.E.I.'			and 
+			Incident#Summary like '%di%'
+				
+		Update IncidentReportJan
+			Set Type='Percent full'
+			--Select * from IncidentReportJan
+			where Type='N.E.I.'			and 
+			Incident#Summary like '%capac%'
+			
+			
+			
+			Update IncidentReportJan
+			Set Type='SQL Agent'
+			--Select * from IncidentReportJan
+				where Type='Collection'			and 
+			Incident#Summary like '%Age%'
+			
+			
+		
+			Update IncidentReportJan
+			Set Type='Job Fails'
+			--Select * from IncidentReportJan
+			where Type='N.E.i.'		
+			
+				and 	Incident#Summary like '%jo%'
+	
+			Update IncidentReportJan
+			Set Type='Collection'
+--			Select * from IncidentReportJan
+			where TYPE='N.E.I.'
+			And Incident#Summary like '%co'
+	
+			Update IncidentReportJan
+			Set Type='SQL Agent'
+			--Select * from IncidentReportJan
+				where Type='N.E.i.'		
+				and 	Incident#Summary like '%sql a%'	
+	
+			Update IncidentReportJan
+			Set Type='Percent full'
+			--Select * from IncidentReportJan
+				where Type='N.E.I.'			and 
+			Incident#Summary like '%d'
+			
+			
+Print 'Done'
+								
+	end--sort info
+	
+	if @Param1= 3
+begin			
+
+			SELECT *, SUBSTRING(INCIDENT#SUMMARY, 
+				CHARINDEX('@', INCIDENT#SUMMARY)+1, 
+			CHARINDEX('@', INCIDENT#SUMMARY)
+				)as ServerName 
+
+			into temporalIncidentReportJan
+
+			from IncidentReportJan
+			 WHERE [INCIDENT#SUMMARY] like '%@%'
+			 
+			 ------------
+
+			 
+			 Select 
+					[Incident#Ticket ID]as  Incident_Ticket_ID ,                                                                                                                                                                                                                                          
+					Incident#Summary   as Incident_Summary   ,                                                                                                                                                                                                                                          
+					[Incident#Cause Code]   as Incident_Cause_Code  ,                                                                                                                                                                                                                                            
+					[Incident#Owner Group]     as    Incident_Owner_Group ,                                                                                                                                                                                                                                   
+					[Incident#Severity]  as Incident_Severity,
+					[Incident#Status]    as Incident_Status,                                                                                                                                                                                                                                 
+					[Incident#Actual Finish (GMT)]  as Incident_Actual_Finish_GMT  ,
+					[Type] as Type, 
+					
+					
+					SUBSTRING(ServerName, -0, 
+					CHARINDEX('|', ServerName)
+				)as ServerNames 
+				into temporalIncidentReportJan1
+				From temporalIncidentReportJan
+
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='MPLTTASDS201'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%mplttasds201%'	
+				and ServerNames like ''
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='USVMSQAIQC02'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%USVMSQAIQC02%'	
+				and ServerNames like ''
+
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='MPTELCOWSH100'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%MPTELCOWSH100%'	
+				and ServerNames like ''
+				
+			Update temporalIncidentReportJan1
+			Set ServerNames='MPTELCPDC101S1'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%MPTELCPDC101S1%'	
+				and ServerNames like ''
+				
+				
+			Update temporalIncidentReportJan1
+			Set ServerNames='scsstaspdb04'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%SCSSTASPDB04%'	
+				and ServerNames like ''			
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='MPTELCZXSH002'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%MPTELCZXSH002%'	
+				and ServerNames like ''			
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='WLTWA69442'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%WLTWA69442%'	
+				and ServerNames like ''			
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='WRDNA69721'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%WRDNA69721%'	
+				and ServerNames like ''			
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='MPLTTASDS201'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%MPLTTASDS201%'	
+				and ServerNames like ''			
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='MPLTTBTJSH001'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%MPLTTBTJSH001%'	
+				and ServerNames like ''			
+
+
+			Update temporalIncidentReportJan1
+			Set ServerNames='WRCHA0HD'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%WRCHA0HD%'	
+				and ServerNames like ''			
+
+
+
+		Update temporalIncidentReportJan1
+			Set ServerNames='WHKGM01VE'
+			--Select * from temporalIncidentReportJan1
+				where Incident_Summary like '%WHKGM01VE%'	
+				and ServerNames like ''			
+
+
+
+Print'Done'
+
+
+
+
+
+
+End--3 place into temporals
+
+	if @Param1= 4
+begin
+		-------------
+
+		Select '-- incidents order by server name' as 'Sort and order By',@Servername [Filtred By]
+
+Declare @total  float
+set @total=(select COUNT(*) from  temporalIncidentReportJan1
+
+)
+
+Declare @NEI float
+Set @NEI =(Select COUNT (*) as Count from temporalIncidentReportJan1 where TYPe like '%N.E.I.%'	)
+
+
+		select ServerNames, Count (ServerNames)as counters
+		,Round((Count (ServerNames)/@total) *100,2)as [% Percents]		
+		from  temporalIncidentReportJan1
+		where  ISNULL(@Servername, ServerNames) = ServerNames 
+		group by ServerNames
+		order by counters desc 
+
+
+		Select '	--incidents order by type' as 'Sort and order By',@Servername [Filtred By]
+
+
+--Declare @total  float
+--set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+
+		select type,  Count (ServerNames)as counters, ROUND( Count (ServerNames)/@total *100,2)as [% Percents]
+		 from  temporalIncidentReportJan1
+		where  ISNULL(@Servername, ServerNames) = ServerNames
+		 --		 where ServerNames like '%'+@Servername+'%' 
+		group by type
+		order by counters desc 
+/*
+Declare @total  float
+set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+
+Declare @NEI float
+Set @NEI =(Select COUNT (*) as Count from temporalIncidentReportJan1 where TYPe like '%N.E.I.%'	)
+
+
+*/
+
+		Select '	--Not Enough information to sort counters'	,@total as Incidents,@NEI as [N.E.I.], (Select Round((@NEI/@total) *100,2))as [% Percent],@Servername [Filtred By]
+		
+				Select Type, COUNT (*) as Count from temporalIncidentReportJan1
+		where TYPe like '%N.E.I.%' and  ISNULL(@Servername, ServerNames) = ServerNames  
+					
+				Group by TYPe 	
+		
+
+		
+	Select '--by servers  and dates'  as 'Sort and order By',@Servername [Filtred By]
+/*
+	Declare @total  float
+set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+	*/
+		select ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1) Date, Count (ServerNames)as counters
+		 , ROUND( Count (ServerNames)/@total *100,2)as [% Percents]
+		 from  temporalIncidentReportJan1
+		--where ServerNames='MPTELCSAS200'
+		where  ISNULL(@Servername, ServerNames) = ServerNames
+		group by ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by Counters desc 
+
+	Select '	--incidents order by type,ServerNames' as 'Sort and order By',@Servername [Filtred By]
+
+
+		select type,ServerNames , Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+		--where ServerNames='MPTELCSAS200'
+		where  ISNULL(@Servername, ServerNames) = ServerNames
+		group by type,ServerNames
+		order by ServerNames desc 
+
+
+	Select '	--incidents order by type,ServerNames, date' as 'Sort and order By',@Servername [Filtred By]
+
+
+		select type,ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1) asncident_Actual_Finish_GMT, Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+		 where  ISNULL(@Servername, ServerNames) = ServerNames
+		--where ServerNames='MPTELCSAS200'
+		group by type,ServerNames,Incident_Actual_Finish_GMT
+		order by ServerNames desc 
+
+	Select '	--by dates order by  counters desc ' as 'Sort and order By',@Servername [Filtred By]
+		select convert(varchar, Incident_Actual_Finish_GMT, 1) as Incident_Actual_Finish_GMT
+		,Count (Incident_Actual_Finish_GMT)as counters
+		 from  temporalIncidentReportJan1
+		 where  ISNULL(@Servername, ServerNames) = ServerNames
+		--where ServerNames='MPTELCSAS200'
+		group by convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by counters desc
+		
+	Select '--by servers  and dates and types' as 'Sort and order By',@Servername [Filtred By]
+		select type,ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1) asncident_Actual_Finish_GMT, Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+		 where  ISNULL(@Servername, ServerNames) = ServerNames
+		--where ServerNames='MPTELCSAS200'
+		group by type,ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by Counters desc 
+
+	
+	Select ' by ServerNames,type and order by ServerNames desc ,counters desc'	 as 'Sort and order By',@Servername [Filtred By]
+		select ServerNames,type,Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+		 where  ISNULL(@Servername, ServerNames) = ServerNames
+		--where ServerNames='MPTELCSAS200'
+		group by ServerNames,type
+		order by ServerNames desc ,counters desc
+
+	Select '	--order and sort by dates ' as 'Sort and order By',@Servername [Filtred By]
+		select convert(varchar, Incident_Actual_Finish_GMT, 1) as Incident_Actual_Finish_GMT
+		,Count (Incident_Actual_Finish_GMT)as counters
+		 from  temporalIncidentReportJan1
+		 where  ISNULL(@Servername, ServerNames) = ServerNames
+		--where ServerNames='MPTELCSAS200'
+		group by convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by convert(varchar, Incident_Actual_Finish_GMT, 1) desc
+
+				
+	Select '	--Not Enough information to sort',@Servername [Filtred By]
+	
+	Select * from temporalIncidentReportJan1
+				where TYPe like '%N.E.I.%'	and ISNULL(@Servername, ServerNames) = ServerNames
+				order by TYPe desc
+
+	Select '	--all incidents',@Servername [Filtred By]
+	
+	Select * from temporalIncidentReportJan1
+				where  ISNULL(@Servername, ServerNames) = ServerNames
+				order by TYPe desc
+
+
+		
+		
+End--4 selects
+
+	if @Param1= 5
+begin
+		ALTER TABLE dbo.IncidentReportJan
+			DROP COLUMN Type			
+
+
+		if exists( select * from test4.sys.tables  where name like 'temporalIncidentReportJan' )
+			drop table temporalIncidentReportJan
+		if exists( select * from test4.sys.tables  where name = 'temporalIncidentReportJan1' )
+			drop table temporalIncidentReportJan1
+			
+		Print 'Drop TemporalIncidentReportJan1 Done
+Drop TemporalIncidentReportJan Done
+Alter Table Done'
+end--Drop tables
+
+	if @Param1> 5
+	begin
+
+Print '
+/*
+**************************************
+* * Info About The Store Procedure * * 
+**************************************
+     *****************************     
+     **  1 Upd table            **    
+     **  2 sort info            **    
+     **  3 place into temporals ** 
+     **  4 selects              ** 
+     **  5 drop temps           **    
+	 **  6 INFO                 **         
+     **  ******Example******	** 
+     **  Tst4Reports1			**
+     **  Tst4Reports 2			**
+     **  Tst4Reports 3			**
+     **  Tst4Reports 4			**
+     **  Tst4Reports 5			**
+     **  Tst4Reports 6			**     
+	 *****************************
+	 ***************************** 
+**************************************
+
+
+
+*****************************************           S E L E C T S            ***************************************** */
+		Select ''-- incidents order by server name'' as ''Sort and order By''
+
+Declare @total  float
+set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+
+Declare @NEI float
+Set @NEI =(Select COUNT (*) as Count from temporalIncidentReportJan1 where TYPe like ''%N.E.I.%''	)
+
+
+		select ServerNames, Count (ServerNames)as counters
+		,Round((Count (ServerNames)/@total) *100,2)as [% Percents]		
+		from  temporalIncidentReportJan1
+		group by ServerNames
+		order by counters desc 
+
+
+		Select ''	--incidents order by type'' as ''Sort and order By''
+
+
+--Declare @total  float
+--set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+
+		select type,  Count (ServerNames)as counters, ROUND( Count (ServerNames)/@total *100,2)as [% Percents]
+		 from  temporalIncidentReportJan1
+		group by type
+		order by counters desc 
+/*
+Declare @total  float
+set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+
+Declare @NEI float
+Set @NEI =(Select COUNT (*) as Count from temporalIncidentReportJan1 where TYPe like ''%N.E.I.%''	)
+
+
+*/
+
+		Select ''	--Not Enough information to sort counters''	,@total as Incidents,@NEI as [N.E.I.], (Select Round((@NEI/@total) *100,2))as [% Percent]
+				Select Type, COUNT (*) as Count from temporalIncidentReportJan1
+				where TYPe like ''%N.E.I.%''
+				Group by TYPe 	
+		
+
+		
+	Select ''--by servers  and dates''  as ''Sort and order By''
+/*
+	Declare @total  float
+set @total=(select COUNT(*) from  temporalIncidentReportJan1)
+	*/
+		select ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1) Date, Count (ServerNames)as counters
+		 , ROUND( Count (ServerNames)/@total *100,2)as [% Percents]
+		 from  temporalIncidentReportJan1
+
+		group by ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by Counters desc 
+
+	Select ''	--incidents order by type,ServerNames''as ''Sort and order By''
+		select type,ServerNames , Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+	
+		group by type,ServerNames
+		order by ServerNames desc 
+
+
+	Select ''	--incidents order by type,ServerNames, date'' as ''Sort and order By''
+
+
+		select type,ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1) asncident_Actual_Finish_GMT, Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+	
+		group by type,ServerNames,Incident_Actual_Finish_GMT
+		order by ServerNames desc 
+
+	Select ''	--by dates order by  counters desc '' as ''Sort and order By''
+		select convert(varchar, Incident_Actual_Finish_GMT, 1) as Incident_Actual_Finish_GMT
+		,Count (Incident_Actual_Finish_GMT)as counters
+		 from  temporalIncidentReportJan1
+		
+		group by convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by counters desc
+		
+	Select ''--by servers  and dates and types'' as ''Sort and order By''
+		select type,ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1) asncident_Actual_Finish_GMT, Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+	
+		group by type,ServerNames,convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by Counters desc 
+
+	
+	Select '' by ServerNames,type and order by ServerNames desc ,counters desc''	 as ''Sort and order By''
+		select ServerNames,type,Count (ServerNames)as counters
+		 from  temporalIncidentReportJan1
+		
+		group by ServerNames,type
+		order by ServerNames desc ,counters desc
+
+	Select ''	--order and sort by dates '' as ''Sort and order By''
+		select convert(varchar, Incident_Actual_Finish_GMT, 1) as Incident_Actual_Finish_GMT
+		,Count (Incident_Actual_Finish_GMT)as counters
+		 from  temporalIncidentReportJan1
+
+		group by convert(varchar, Incident_Actual_Finish_GMT, 1)
+		order by convert(varchar, Incident_Actual_Finish_GMT, 1) desc
+
+				
+	Select ''	--Not Enough information to sort''
+	
+	Select * from temporalIncidentReportJan1
+				where TYPe like ''%N.E.I.%''	order by TYPe desc
+
+'				 
+end--info
+
+
+	
+end
+
+
+

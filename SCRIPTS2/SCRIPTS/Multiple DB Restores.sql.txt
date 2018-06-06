@@ -1,0 +1,151 @@
+/* ---enable cmdshell
+sp_CONFIGURE 'show advanced options',1
+RECONFIGURE
+GO
+exec sp_configure 'xp_cmdshell' , 1
+GO
+RECONFIGURE
+*/
+SET NOCOUNT ON
+
+Declare @BackupFile varchar(500)
+Declare @BackupPath varchar(500)
+Declare @BackupFileExtension varchar(10)
+Declare @DataPath varchar(500)
+Declare @LogPath varchar(500)
+Declare @DatabaseName varchar(500)
+
+Declare @DOSCmd varchar(500)
+Declare @RestoreCmd varchar(500)
+Declare @RestoreString nvarchar(MAX)
+
+/************************** SET PARAMETERS ***************************/
+/************************** SET PARAMETERS ***************************/
+/************************** SET PARAMETERS ***************************/
+
+Set @BackupPath = 'C:\'
+Set @BackupFileExtension = 'bak'
+Set @DataPath = 'C:\'
+Set @LogPath = 'C:\'
+
+/************************** SET PARAMETERS ***************************/
+/************************** SET PARAMETERS ***************************/
+/************************** SET PARAMETERS ***************************/
+
+
+IF (object_id('tempdb..#CheckFile') is not null)
+   drop table #CheckFile
+IF (object_id('tempdb..#BackupHeader') is not null)
+   drop table #BackupHeader
+IF (object_id('tempdb..#Files') is not null)
+   drop table #Files
+  
+Create table #CheckFile (Data varchar(500))
+
+Create table #Files (
+LogicalName	nvarchar(128),PhysicalName	nvarchar(260),Type	char(1),
+FileGroupName	nvarchar(128),Size	numeric(20,0),MaxSize	numeric(20,0),
+FileID	bigint,CreateLSN	numeric(25,0),DropLSN	numeric(25,0) NULL,
+UniqueID	uniqueidentifier,ReadOnlyLSN	numeric(25,0) NULL,
+ReadWriteLSN	numeric(25,0) NULL,BackupSizeInBytes	bigint,SourceBlockSize	int,
+FileGroupID	int,LogGroupGUID	uniqueidentifier NULL,DifferentialBaseLSN	numeric(25,0) NULL,
+DifferentialBaseGUID	uniqueidentifier,IsReadOnly	bit,IsPresent	bit,TDEThumbprint	varbinary(32))
+
+
+
+
+Create Table #BackupHeader (
+BackupName	nvarchar(128),BackupDescription	nvarchar(255),BackupType	smallint,
+ExpirationDate	datetime,Compressed	char(1),Position	smallint,DeviceType	tinyint,
+UserName	nvarchar(128),ServerName	nvarchar(128),DatabaseName	nvarchar(128),
+DatabaseVersion	int,DatabaseCreationDate	datetime,BackupSize	numeric(20,0),
+FirstLSN	numeric(25,0),LastLSN	numeric(25,0),CheckpointLSN	numeric(25,0),
+DatabaseBackupLSN	numeric(25,0),	BackupStartDate	datetime,BackupFinishDate	datetime,
+SortOrder	smallint,CodePage	smallint,UnicodeLocaleId	int,UnicodeComparisonStyle	int,
+CompatibilityLevel	tinyint,SoftwareVendorId	int,SoftwareVersionMajor	int,
+SoftwareVersionMinor	int,SoftwareVersionBuild	int,MachineName	nvarchar(128),
+Flags 	int,BindingID	uniqueidentifier,RecoveryForkID	uniqueidentifier,
+Collation	nvarchar(128),FamilyGUID	uniqueidentifier,HasBulkLoggedData	bit,
+IsSnapshot	bit,IsReadOnly	bit,IsSingleUser	bit,HasBackupChecksums	bit,
+IsDamaged	bit,BeginsLogChain	bit,HasIncompleteMetaData	bit,IsForceOffline	bit,
+IsCopyOnly	bit	,FirstRecoveryForkID	uniqueidentifier,ForkPointLSN	numeric(25,0) NULL,
+RecoveryModel	nvarchar(60),DifferentialBaseLSN	numeric(25,0) NULL,DifferentialBaseGUID	uniqueidentifier,
+BackupTypeDescription	nvarchar(60),BackupSetGUID	uniqueidentifier NULL,CompressedBackupSize	numeric(20,0))
+
+
+
+Set @DOSCmd = 'Dir ' + @BackupPath + '*.'  + @BackupFileExtension + ' /B'
+
+insert into #checkfile
+exec master..xp_cmdshell @DOSCmd
+
+Delete #CheckFile where Data is null
+
+Update #CheckFile Set Data = @BackupPath + Data
+
+---Select * from #CheckFile order by Data
+
+DECLARE DB_Cursor CURSOR FOR
+Select * from #CheckFile order by Data
+
+OPEN DB_Cursor
+FETCH NEXT FROM DB_Cursor
+INTO @BackupFile
+WHILE @@FETCH_STATUS = 0
+
+BEGIN
+
+	Set @RestoreCmd = 'restore headeronly from disk = ''' + @BackupFile +  ''''
+
+	insert into #BackupHeader
+	EXEC(@RestoreCmd)
+
+	Select @DatabaseName = DatabaseName from #BackupHeader
+
+	Set @RestoreCmd = 'restore filelistonly from disk = ''' + @BackupFile +  ''''
+	
+	INSERT #Files
+	EXEC(@RestoreCmd)
+
+
+
+
+
+	Set @RestoreString = '
+USE [master]
+GO
+ALTER DATABASE [' + @DatabaseName + '] SET  SINGLE_USER WITH ROLLBACK IMMEDIATE
+GO
+ALTER DATABASE [' + @DatabaseName + '] SET  MULTI_USER WITH ROLLBACK IMMEDIATE
+GO
+
+RESTORE DATABASE [' + @DatabaseName + ']' + CHAR(13) + 'FROM  DISK = N''' + @BackupFile + '''' + CHAR(13) +'WITH  FILE = 1,'+ CHAR(13) 
+
+
+	Select @RestoreString = @RestoreString  + 
+		'MOVE  N''' + LogicalName  + ''' TO N''' + 
+			(Case [Type] 
+			When 'L' Then  @LogPath + @DatabaseName + '_Log.ldf'',' + Char(13)
+			Else @DataPath + @DatabaseName + '.mdf'',' End) + Char(13)
+	FROM #Files
+
+	Set @RestoreString =  SUBSTRING( @RestoreString, 1,Len(@RestoreString)-2)   + CHAR(13) +'REPLACE,  STATS = 1'+ CHAR(10) +CHAR(13) + 'GO'
+
+	Print @RestoreString
+	
+--	Select * from #BackupHeader
+--	Select * from #Files
+	
+	TRUNCATE TABLE #BackupHeader
+	
+	TRUNCATE TABLE #Files
+	
+	FETCH NEXT FROM DB_Cursor
+	INTO @BackupFile
+END
+
+CLOSE DB_Cursor
+DEALLOCATE DB_Cursor
+
+
+

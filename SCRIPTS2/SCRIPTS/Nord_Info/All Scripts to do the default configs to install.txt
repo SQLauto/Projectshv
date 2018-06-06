@@ -1,0 +1,89 @@
+--p0902t6a
+--Set max memory
+
+sp_configure 'show advanced options', 1;
+GO
+
+RECONFIGURE;
+GO
+
+DECLARE @totalRAM INT
+DECLARE @sqlCMD VARCHAR(2000)
+
+SELECT @totalRAM = ([total_physical_memory_kb] / 1024) - 2048
+FROM [master].[sys].[dm_os_sys_memory]
+
+--SELECT @totalRAM
+
+SET @sqlCMD = 'sp_configure ''max server memory'', ' + CAST(@totalRAM AS VARCHAR(6)) + ';'
+PRINT @sqlCMD
+EXEC (@sqlCMD)
+
+GO
+RECONFIGURE;
+GO
+
+-----
+
+
+
+---tempdb
+
+DECLARE @sqlcmd VARCHAR(1000)
+DECLARE @n INT, @max INT
+
+select @max = cpu_count from sys.dm_os_sys_info
+SET @n = 2
+
+WHILE @n <= @max
+BEGIN
+	SELECT @sqlcmd = 'ALTER DATABASE [tempdb] ADD FILE ( NAME = N''tempdb_data'+CAST(@n AS VARCHAR(2))+''', FILENAME = N''G:\SQLServr\Data\tempdb_data'+CAST(@n AS VARCHAR(2))+'.ndf'' , SIZE = 524288KB , FILEGROWTH = 524288KB )'
+	SET @n = @n + 1
+	PRINT @sqlcmd
+	EXEC (@sqlcmd)
+END
+
+ALTER DATABASE [tempdb] MODIFY FILE ( NAME = N'tempdev', SIZE = 524288KB , FILEGROWTH = 524288KB )
+GO
+ALTER DATABASE [tempdb] MODIFY FILE ( NAME = N'templog', SIZE = 131072KB , FILEGROWTH = 131072KB )
+GO
+------
+
+-----sql agent
+
+USE [msdb]
+GO
+EXEC msdb.dbo.sp_set_sqlagent_properties @sqlserver_restart=0, 
+		@monitor_autostart=0
+GO
+USE [msdb]
+GO
+EXEC msdb.dbo.sp_set_sqlagent_properties @sqlserver_restart=0, 
+		@monitor_autostart=0, 
+		@jobhistory_max_rows=10000, 
+		@jobhistory_max_rows_per_job=1000
+GO
+
+-------
+
+
+
+
+
+
+
+
+
+
+/********traces
+-T1204
+-T1222
+-T2505
+
+
+
+;–T1204;–T1222;-T2505 
+
+*/
+
+--dbcc tracestatus

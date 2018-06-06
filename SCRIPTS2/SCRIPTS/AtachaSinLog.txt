@@ -1,0 +1,13 @@
+USE [master]
+GO
+CREATE DATABASE [GlobalSTORE] ON 
+( FILENAME = N'E:\SQLSERVR\Data\GlobalSTORE.mdf' )
+ FOR ATTACH_REBUILD_LOG
+GO
+
+
+
+sp_attach_DB 'GlobalStore',
+'E:\SQLSERVR\Data\GlobalSTORE.mdf',
+'D:\SQLSERVR\Log\GlobalSTORE_log.LDF'
+GO

@@ -1,0 +1,6 @@
+use master
+exec sp_configure 'xp_cmdshell',1
+reconfigure with override
+go
+SCTWIN2K85286
+SCTWIN2K85286 

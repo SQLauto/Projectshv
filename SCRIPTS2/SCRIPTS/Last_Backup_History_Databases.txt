@@ -1,0 +1,129 @@
+/*
+DECLARE @date INT
+SET @date = 1000
+
+IF (OBJECT_ID('tempdb..#full') IS NOT NULL)      
+DROP TABLE #full
+
+IF (OBJECT_ID('tempdb..#log') IS NOT NULL)      
+DROP TABLE #log
+
+-- Check backup history
+SELECT  
+	msdb.dbo.backupset.database_name as Name,  
+   MAX(msdb.dbo.backupset.backup_start_date) as Date
+INTO #full
+FROM  sys.databases
+LEFT OUTER JOIN
+msdb.dbo.backupset 
+ON sys.databases.name = msdb.dbo.backupset.database_name
+INNER JOIN msdb.dbo.backupmediafamily
+ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id
+WHERE  (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - @date)  
+AND msdb..backupset.type = 'D'
+GROUP BY database_name
+ORDER BY  MAX(msdb.dbo.backupset.backup_start_date) DESC
+
+SELECT  
+	msdb.dbo.backupset.database_name as Name,  
+   MAX(msdb.dbo.backupset.backup_start_date) as Date
+INTO #log
+FROM  sys.databases
+LEFT OUTER JOIN
+msdb.dbo.backupset 
+ON sys.databases.name = msdb.dbo.backupset.database_name
+INNER JOIN msdb.dbo.backupmediafamily
+ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id
+WHERE  (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - @date)  
+AND msdb..backupset.type = 'l'
+GROUP BY database_name
+ORDER BY  MAX(msdb.dbo.backupset.backup_start_date) DESC
+
+SELECT sys.databases.name as Name, d.date as [Full Backup], l.date as [Log Backup]
+FROM sys.databases
+LEFT JOIN #full as d
+ON d.name = sys.databases.name
+LEFT JOIN #log as l
+ON l.name = sys.databases.name
+ORDER BY 2 DESC
+
+*/
+------------------CORREGIDO Y AUMENTADO
+
+Select   database_id, Round (Sum((cast (size as float)*8)/1024)*0.000976, 2)  
+SizeGB  
+Into #test 
+FROM sys.master_files --WHERE DB_NAME(database_id) =
+Group by database_id
+
+
+
+DECLARE @date2 INT
+SET @date2 = 1000
+IF (OBJECT_ID('tempdb..#full') IS NOT NULL)      
+DROP TABLE #full
+
+IF (OBJECT_ID('tempdb..#log') IS NOT NULL)      
+DROP TABLE #log
+
+-- Check backup history
+SELECT  
+	msdb.dbo.backupset.database_name as Name,  
+   MAX(msdb.dbo.backupset.backup_start_date) as Date
+INTO #full
+FROM  sys.databases
+LEFT OUTER JOIN
+msdb.dbo.backupset 
+ON sys.databases.name = msdb.dbo.backupset.database_name
+INNER JOIN msdb.dbo.backupmediafamily
+ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id
+WHERE  (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - @date2)  
+AND msdb..backupset.type = 'D'
+GROUP BY database_name
+ORDER BY  MAX(msdb.dbo.backupset.backup_start_date) DESC
+
+SELECT  
+	msdb.dbo.backupset.database_name as Name,  
+   MAX(msdb.dbo.backupset.backup_start_date) as Date
+INTO #log
+FROM  sys.databases
+LEFT OUTER JOIN
+msdb.dbo.backupset 
+ON sys.databases.name = msdb.dbo.backupset.database_name
+INNER JOIN msdb.dbo.backupmediafamily
+ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id
+WHERE  (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - @date2)  
+AND msdb..backupset.type = 'l'
+GROUP BY database_name
+ORDER BY  MAX(msdb.dbo.backupset.backup_start_date) DESC
+
+SELECT sys.databases.name as Name, d.date as [Full Backup], l.date as [Log Backup], sys.databases.recovery_model_desc  , T.SizeGB
+FROM sys.databases
+LEFT JOIN #full as d
+ON d.name = sys.databases.name
+LEFT JOIN #log as l
+ON l.name = sys.databases.name
+Left join #test as T
+On t.database_id= sys.databases.database_id
+ORDER BY 2 DESC
+
+
+DECLARE @info varchar(30)
+Set @info =(select Count(*) from #test)
+--Where sys.databases.name not like 'Tempdb')
+
+
+
+
+
+SELECT @info Dbs, Sum(T.SizeGB) Total_Space 
+FROM sys.databases
+LEFT JOIN #full as d
+ON d.name = sys.databases.name
+LEFT JOIN #log as l
+ON l.name = sys.databases.name
+Left join #test as T
+On t.database_id= sys.databases.database_id
+--Where sys.databases.name not like 'Tempdb'
+
+drop table #test 

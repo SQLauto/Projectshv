@@ -1,0 +1,19 @@
+wrk-IBMCITO-SQL-ADM-ls
+
+osql -S "GBRGS004\bkupexec" -E
+
+osql -S "DUKES032\rtc" -E
+
+
+
+
+USE [master]
+GO
+EXEC master.dbo.sp_grantlogin @loginame = N'GCN\wrk-IBMCITO-SQL-ADM-ls'
+EXEC master.dbo.sp_defaultdb @loginame = N'GCN\wrk-IBMCITO-SQL-ADM-ls', @defdb = N'master'
+EXEC master.dbo.sp_defaultlanguage @loginame = N'GCN\wrk-IBMCITO-SQL-ADM-ls'
+GO
+EXEC master..sp_addsrvrolemember @loginame = N'GCN\wrk-IBMCITO-SQL-ADM-ls', @rolename = N'sysadmin'
+GO
+exit
+go

@@ -1,0 +1,21 @@
+Create Table ##Users ( 
+DbName sysname null, 
+UserName sysname null, 
+RoleName sysname null, 
+LoginName sysname null, 
+DefDBName sysname null, 
+DefSchemaName sysname null, 
+UserID smallint null, 
+SID smallint null ) 
+
+
+exec sp_msforeachdb 'USE [?]; 
+ALTER TABLE ##Users ADD CONSTRAINT dt_dbname DEFAULT ''?'' FOR DbName ; 
+INSERT ##Users (UserName,RoleName,LoginName,DefDBName,DefSchemaName,UserID,SID) 
+exec sp_helpuser; 
+ALTER TABLE ##Users DROP CONSTRAINT dt_dbname; ' 
+
+Select @@SERVERNAME as ServerName, DbName, UserName, RoleName
+from ##Users
+Where dbname not in ('Master', 'Tempdb', 'Model','Msdb')
+--drop table ##Users

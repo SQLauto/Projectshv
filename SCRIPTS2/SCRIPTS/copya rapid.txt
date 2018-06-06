@@ -1,0 +1,26 @@
+/*Quick FTp
+By carlos Elizondo*/
+
+
+declare  @cmdstr2 varchar(1000)
+
+ set @cmdstr2 = 'copy K:\MSSQL\Backup\Full\ndm*.BKP'
+ set @cmdstr2 = @cmdstr2 + '  \\MPLTTAGSC003S1\L$\MSSQL\2k-Backup\Full'
+
+
+exec master..xp_cmdshell @cmdstr2
+
+
+-- o entre dsco local
+
+
+declare  @From varchar(1000)
+declare  @To varchar(1000)
+declare  @Script varchar(1000)
+
+set @From = 'H:\MSSQL.5\BACKUP\CSE4INST124\BACKUPDB\ENTR_SDC_db_20130610201330.bak'
+set @To ='D:\DBA'
+
+
+Set @Script = 'Copy '+@From+'  '+@to
+exec master..xp_cmdshell @Script

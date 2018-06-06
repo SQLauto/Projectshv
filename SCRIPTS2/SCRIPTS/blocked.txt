@@ -1,0 +1,59 @@
+
+
+
+create procedure [dbo].[sp_blocked]
+as
+
+set nocount on
+
+if exists ( select * from master..sysprocesses nolock where blocked <> 0 )
+
+begin
+	/* show top blockers, but no duplicates */
+
+	select convert(char(24),getdate(),13)
+	select 'Blocker(s) causing the problem.'
+	select 
+	'ID'       = str( spid, 5 ),
+	'Status'   = convert( varchar(60), status ),
+	--'Blk'      = str( blocked, 2 ),
+	'Station'  = convert( varchar(256), hostname ),
+	'User'     = convert( varchar(50), suser_name( sid ) ),
+	'DbName'   = convert( varchar(50), db_name( dbid ) ),       
+	'Program'  = convert( varchar(256), program_name ),
+	'Command'  = convert( varchar(32), cmd )
+	-- ,
+	--'    CPU'  = str( cpu, 7 ),
+	--'     IO'  = str( physical_io, 7 )
+	from master..sysprocesses (nolock)
+	where spid in ( select blocked from master..sysprocesses (nolock) )
+	and blocked = 0
+	--order by str(spid,2)
+
+	/* show victims */
+
+	select 'Victims of the above blocker(s).'
+	select 'ID'= str( spid, 5 ),
+	'Status'   = convert( char(10), status ),
+	--'Blk'      = str( blocked, 2 ),
+	'Station'  = convert( varchar(256), hostname ),
+	'User'     = convert( varchar(50), suser_name( sid ) ),
+	'DbName'   = convert( varchar(50), db_name( dbid ) ),
+	'Program'  = convert( varchar(256), program_name ),
+	'Command'  = convert( varchar(32), cmd )
+	from master..sysprocesses (nolock)
+	where blocked <> 0
+	--order by spid
+end
+
+else
+begin
+	select "There are NO blocks at this time.", convert (char(24),getdate(),13)
+end
+
+return
+
+
+
+
+

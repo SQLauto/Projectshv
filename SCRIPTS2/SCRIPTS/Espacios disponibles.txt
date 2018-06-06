@@ -1,0 +1,246 @@
+SET NOCOUNT ON
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DBA_SERVER') )
+	drop table ##DBA_SERVER
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DBA_INSTANCE') )
+	drop table ##DBA_INSTANCE
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DBA_SERVINST') )
+	drop table ##DBA_SERVINST
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DBA_DATABASE') )
+	drop table ##DBA_DATABASE
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DBA_FILEGROUP') )
+	drop table ##DBA_FILEGROUP
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##DBA_FILE') )
+	drop table ##DBA_FILE
+
+
+CREATE TABLE ##DBA_SERVER(
+serverid smallint IDENTITY(1,1) PRIMARY KEY ,
+name nchar(256)	
+)
+
+CREATE TABLE ##DBA_INSTANCE(
+instanceid smallint IDENTITY(1,1) PRIMARY KEY ,
+name nchar(256),
+defaultsrv smallint
+)
+
+
+CREATE TABLE ##DBA_SERVINST(
+serverid smallint,
+instanceid smallint,
+CONSTRAINT PK_SERVINST_01 PRIMARY KEY (serverid,instanceid)
+)
+
+
+CREATE TABLE ##DBA_DATABASE (
+invdbid	int IDENTITY(1,1) PRIMARY KEY,
+instanceid smallint,
+dbid	smallint,
+type	char(1) null,
+name	nchar(256),
+size	numeric(12,2),
+owner	nchar(256),
+created	datetime,
+recovery	char(11) null, 
+lastupdate	datetime,
+)
+
+CREATE TABLE ##DBA_FILEGROUP(	
+invfgid	int IDENTITY(1,1) PRIMARY KEY,
+instanceid	smallint,
+dbid	smallint,
+fgid	smallint,
+name	nchar(256)
+)
+
+CREATE TABLE ##DBA_FILE (	
+invfid	int IDENTITY(1,1) PRIMARY KEY, 
+instanceid	smallint,
+dbid	smallint,
+fgid	smallint,
+fid	smallint,
+type    char(1),
+name	nchar(256),
+path	nchar(520),
+size	numeric(12,2),
+used	numeric(12,2),
+free	numeric(12,2),
+maxsize	int,
+growth	int,
+typegrowth	char(2),
+lastupdate	datetime,
+)
+
+
+
+declare @serverid as int
+declare @Servername as nchar(256)
+declare @instanceid as int
+declare @Instancename as nchar(256)
+
+
+Set @Servername = CAST(SERVERPROPERTY('Machinename') as nchar(256))
+
+Set @Instancename =  CAST(SERVERPROPERTY('Servername') as nchar(256))
+
+
+insert ##DBA_SERVER (name)
+values(@Servername)
+
+Set @serverid = @@IDENTITY
+
+INSERT ##DBA_INSTANCE(name, defaultsrv)
+values(@Instancename, @serverid)
+
+Set @instanceid=@@IDENTITY
+
+insert into ##DBA_SERVINST
+Values(@serverid, @instanceid)
+
+/******************************************************************************/
+/******************************************************************************/
+/******************           DATABASES                  **********************/
+/******************************************************************************/
+/******************************************************************************/
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.#tmphelpdb') )
+	drop table #tmphelpdb
+
+Create Table #tmphelpdb (
+[name] sysname, 
+db_size char(30), 
+owner sysname, 
+dbid int, 
+created  varchar(15), 
+status  varchar(520),
+compatibility_level varchar(10)
+)
+
+insert into #tmphelpdb 
+exec sp_helpdb
+
+
+insert into ##DBA_DATABASE (instanceid, dbid, type, name, size, owner, created, recovery, lastupdate)
+Select @instanceid, d.dbid, Case When s.name in ('master','msdb','model','tempdb','distribution') then 'S' Else 'U' End as Type,  s.name,  Cast(REPLACE(d.db_size,'MB','') as numeric(20,1)) as dbsize, d.owner, s.crdate,
+cast(DATABASEPROPERTYEX(d.name,'recovery') as varchar(520)) recovery, getdate()
+from #tmphelpdb d
+join  master.dbo.sysdatabases s on s.dbid=d.dbid
+
+
+
+/******************************************************************************/
+/******************************************************************************/
+/******************    TRANSACTION LOGS                  **********************/
+/******************************************************************************/
+/******************************************************************************/
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.##LogDetails') )
+	drop table ##LogDetails
+
+CREATE TABLE ##LogDetails (
+        "databasename" nvarchar(128), Filesize float , 
+        "%Usage" float , Status int
+)
+select * from ##LogDetails
+INSERT INTO ##LogDetails ("databasename" , Filesize ,  "%Usage" , Status)
+EXEC sp_executeSQL N'dbcc sqlperf( logspace ) with NO_INFOMSGS'
+
+
+
+/******************************************************************************/
+/***************     EMPIEZA PROCESO POR BASE DE DATOS       ******************/
+/******************************************************************************/
+
+declare @dbid as smallint 
+declare @dbname as nchar(256)
+
+DECLARE DB_cursor CURSOR FOR
+select dbid, name as dbname from ##DBA_DATABASE
+
+OPEN DB_cursor
+FETCH NEXT FROM DB_cursor into @dbid,  @dbname
+WHILE @@FETCH_STATUS = 0
+BEGIN
+
+
+/**********************************************************************************/
+DECLARE @strSQL as nvarchar(4000)
+Set @strSQL= '  SET NOCOUNT ON  
+USE [' + ltrim(rtrim(@dbname)) + ']
+-----------FILEGROUPS
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N''tempdb.dbo.#tmphelpfilegroup'') )
+	drop table #tmphelpfilegroup
+
+Create Table #tmphelpfilegroup(Groupname nvarchar(255), GroupId int,FileCount int)
+
+insert into #tmphelpfilegroup
+exec sp_helpfilegroup
+
+insert into ##DBA_FILEGROUP
+Select @instanceid, @dbid, GroupId, Groupname from #tmphelpfilegroup
+
+insert into ##DBA_FILEGROUP
+values (@instanceid,@dbid,0,''TRANSACTION LOG'')
+
+-------------FILES
+
+if exists( Select * from tempdb.dbo.sysobjects where id = object_id(N''tempdb.dbo.#tmpfilestats'') )
+	drop table #tmpfilestats
+
+
+CREATE TABLE #tmpfilestats ( 
+        fileId int , filegroupid int , totalextents int , usedextents int , 
+        "name" nvarchar(520)  , "filename" nvarchar(520),
+	totalsize AS ((totalextents * 64.0 )/1024 ),
+	usedsize AS ((usedextents * 64.0 ) / 1024 )
+)
+
+insert #tmpfilestats (fileId,filegroupid,totalextents,usedextents,"name", "filename")
+exec (''dbcc showfilestats with tableresults,NO_INFOMSGS'')
+
+
+insert into ##DBA_FILE (instanceid, dbid, fgid, fid, type, name, path, size, used, free, maxsize, growth, typegrowth, lastupdate)
+select @instanceid, @dbid, f.filegroupid, f.fileId, ''D'' as type, f.name, f.filename, f.totalsize, f.usedsize, f.totalsize - f.usedsize as free, 
+Case When s.maxsize=-1 Then -1 Else  s.maxsize/128.0 End as maxsize, case when s.status & 0x100000 >  0 then s.growth  else cast(CEILING(s.growth / 128.0) as decimal(6,2)) End as growth, case when s.status & 0x100000 >  0 then ''%'' else ''MB'' end as typegrowth, getdate() as lastupdate
+from #tmpfilestats f
+join sysfiles s on s.groupid=f.filegroupid and s.fileId = f.fileId
+
+
+insert into ##DBA_FILE (instanceid, dbid, fgid, fid, type, name, path, size, used, free, maxsize, growth, typegrowth, lastupdate) 
+Select @instanceid, @dbid, s.Groupid, s.fileId, ''T'' as type, s.name, s.filename, l.Filesize, 
+l.Filesize - Round((l.Filesize - ((l.Filesize * (l."%Usage")) / 100)),1) as LogSpaceused, 
+Round((Filesize - ((Filesize * ("%Usage")) / 100)),1)  as LogSpacefree,
+Case When s.maxsize=-1 Then -1 Else  s.maxsize/128.0 End as maxsize, case when s.status & 0x100000 >  0 then s.growth  else cast(CEILING(s.growth / 128.0) as decimal(6,2)) End as growth, case when s.status & 0x100000 >  0 then ''%'' else ''MB'' end as typegrowth, getdate() as lastupdate
+from sysfiles s 
+inner join ##LogDetails l on l.databasename = @dbname
+where s.groupid=0  '
+
+exec sp_executeSQL @strSQL, N'@instanceid int, @dbid smallint, @dbname nchar(256)', @instanceid, @dbid, @dbname
+
+FETCH NEXT FROM DB_cursor into @dbid,  @dbname
+
+END
+
+CLOSE DB_cursor
+
+DEALLOCATE DB_cursor
+
+
+Select ltrim(rtrim(s.name)) Server, ltrim(rtrim(i.name)) Instancia,
+ltrim(rtrim(d.name)) as BaseDatos, d.[size], ltrim(rtrim(owner)), ltrim(rtrim([recovery])) [recovery], d.lastupdate DBlastupdate, 
+ltrim(rtrim(fg.name)) as nameFilegroup,
+ltrim(rtrim(f.name)) as filename, ltrim(rtrim(f.path)) path, f.[size], f.used, f.[free], f.[maxsize], f.growth, f.typegrowth, f.lastupdate as Filelastupdate
+from ##DBA_INSTANCE i 
+inner join ##DBA_SERVER s on s.serverid = i.defaultsrv
+inner join ##DBA_DATABASE d on d.instanceid= i.instanceid
+inner join ##DBA_FILEGROUP fg on fg.instanceid= d.instanceid and fg.dbid=d.dbid
+inner join ##DBA_FILE f on f.fgid=fg.fgid and f.instanceid=fg.instanceid and f.dbid=fg.dbid
+Order by d.name, fg.name, f.fid 
+
+RETURN

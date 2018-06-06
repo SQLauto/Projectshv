@@ -1,0 +1,11 @@
+/*To change the afiniti mask*/
+
+
+EXEC sys.sp_configure N'show advanced options', N'1' RECONFIGURE WITH
+OVERRIDE
+
+GO
+
+EXEC sys.sp_configure N'affinity mask', N'0'
+
+GO

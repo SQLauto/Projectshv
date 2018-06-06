@@ -1,0 +1,45 @@
+set nocount on
+
+create table #DriveFreeSpace (Drive nvarchar(6), MBFree int)
+
+insert into #DriveFreeSpace
+exec xp_fixeddrives
+
+declare @UserDBSize int
+declare @BackupDriveFreeSpace int
+declare @BackupDrive nvarchar(6)
+declare @Msg varchar(500)
+
+set @BackupDrive = 'D'
+
+select
+  @BackupDriveFreeSpace = MBFree
+from
+  #DriveFreeSpace
+where
+  Drive = @BackupDrive
+
+  
+select
+   @UserDBSize = ((sum(B.[size]) * 8.0)/(1024.0))
+from
+ sys.databases A
+ inner join sys.master_files B
+  on A.database_id = B.database_id
+where
+ A.[state] = 0
+
+set @Msg =  'UserDBsSize = ' + convert(varchar(50), @UserDBSize) + ' MB; BackupDrive (' + @BackupDrive + ') has a free space of ' + convert(varchar(50), @BackupDriveFreeSpace) + ' MB.'
+--print @Msg
+
+If @UserDBSize < @BackupDriveFreeSpace
+begin
+ Print @Msg
+end
+else
+begin
+ set @Msg = @Msg + ' Not enough space to backup DBs.'
+ RaisError(@Msg, 11, 1) with log
+end
+
+drop table #DriveFreeSpace

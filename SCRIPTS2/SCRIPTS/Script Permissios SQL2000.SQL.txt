@@ -1,0 +1,93 @@
+--Also execute the following stored procedures to get a detail depending on whatpermissions you need to retain and verify (source or destination database)
+--
+--USE [DbName]
+--GO
+--Exec sp_helpuser
+--GO
+---Exec sp_helprotect
+--8192
+
+
+
+---sp_helptext sp_helprotect
+SET NOCOUNT ON
+
+SELECT	'USE' + SPACE(1) + QUOTENAME(DB_NAME()) AS '--Database Context'
+
+SELECT Case 
+	When issqlrole=1 Then 
+		'EXEC sp_droprole ' + QuoteName(name,'''') + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10) +
+		'EXEC sp_addrole ' + QuoteName(name,'''') + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10) 
+	When isapprole=1 Then 
+		'EXEC sp_dropapprole ' + QuoteName(name,'''') + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10) +
+		'EXEC sp_addapprole @rolename=' + QuoteName(name,'''') + ', @password = ''*****'' ' + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10)
+	Else '' End as '---Roles'
+FROM [dbo].[sysusers]
+WHERE
+(
+[issqlrole] = 1
+OR [isapprole] = 1
+)
+AND [name] NOT IN
+(
+'public',
+'INFORMATION_SCHEMA',
+'db_owner',
+'db_accessadmin',
+'db_securityadmin',
+'db_ddladmin',
+'db_backupoperator',
+'db_datareader',
+'db_datawriter',
+'db_denydatareader',
+'db_denydatawriter'
+)
+
+------------------------------------------
+
+if object_id('tempdb..#tmpusers')is not null
+	drop table #tmpusers
+
+select DISTINCT o.name, loginname = (case when (o.sid = 0x00) then NULL else l.loginname end),  o.uid, o.hasdbaccess 
+into #tmpusers
+from dbo.sysusers o 
+left join master.dbo.syslogins l on l.sid = o.sid 
+where ((o.issqlrole != 1 and o.isapprole != 1 and o.status != 0) or (o.sid = 0x00) and o.hasdbaccess = 1)and o.isaliased != 1 
+and o.name not in ('dbo','guest')
+order by o.name
+
+
+select 
+'if exists (select * from dbo.sysusers where name = N' + QuoteName(name,'''') + ' and uid < 16382)' + CHAR(13) + CHAR(10) + 
+'	EXEC sp_revokedbaccess ' + QuoteName(name,'''') + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10) +
+'EXEC sp_grantdbaccess N' + QuoteName(loginname,'''') + ', N' + QuoteName(name,'''')  + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10) 
+as '--Users'
+from #tmpusers
+where loginname is not null
+
+
+
+
+----------------------------------------
+if object_id('tempdb..#tmpperm')is not null
+	drop table #tmpperm
+
+CREATE Table #tmpperm
+	(	Owner			sysname			not null
+		,Object			sysname			not null
+		,Grantee		sysname			not null
+		,Grantor		sysname			not null
+		,ProtectType	varchar(10)		null
+		,[Action]		varchar(20)		null	
+		,[Column]			sysname		null	
+	)  
+
+insert #tmpperm
+exec sp_helprotect
+
+select ltrim(rtrim(ProtectType)) + Space(1) + Action + Space(1) 
++ Case When [Column] not in ('(All+New)','(All)','.') Then '(' + QuoteName([Column]) + ') ' Else Space(0) End 
++ Case When Owner='.' and Object='.' Then Space(0) Else 'ON ' + QuoteName(Owner) + '.' + QuoteName(Object) End
++ ' TO ' + QuoteName(Grantee) as '---Object Permissions'
+from #tmpperm
+

@@ -1,0 +1,29 @@
+nimbus_monitor
+
+M0n1t0r#00
+
+
+--08
+
+USE [master]
+GO
+CREATE LOGIN [nimbus_monitor] WITH PASSWORD=N'M0n1t0r#00', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
+GO
+EXEC master..sp_addsrvrolemember @loginame = N'nimbus_monitor', @rolename = N'sysadmin'
+GO
+
+
+
+--05
+USE [master]
+GO
+EXEC master.dbo.sp_addlogin @loginame = N'nimbus_monitor', @passwd = N'M0n1t0r#00', @defdb = N'master'
+GO
+EXEC master..sp_addsrvrolemember @loginame = N'nimbus_monitor', @rolename = N'sysadmin'
+GO
+
+
+
+
+
+

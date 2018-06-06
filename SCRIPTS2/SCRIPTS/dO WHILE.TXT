@@ -1,0 +1,16 @@
+DECLARE @TargetSize INT, @SQLStatement VARCHAR(300)
+
+sELECT   @TargetSize = 11000
+WHILE @TargetSize > 1000
+BEGIN
+
+SELECT @SQLStatement = '
+USE HeinzInt1_SITE
+DBCC SHRINKFILE(1, '+CONVERT(VARCHAR, @TargetSize)+')
+GO'
+print @SQLStatement
+--EXEC (@SQLStatement)
+
+select @TargetSize = @TargetSize - 1000
+
+END  

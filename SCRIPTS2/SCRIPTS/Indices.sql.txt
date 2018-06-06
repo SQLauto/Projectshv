@@ -1,0 +1,50 @@
+USE rst;
+
+GO
+--- reconstrulle
+
+ALTER INDEX ALL ON salidas
+REBUILD WITH (FILLFACTOR = 90, SORT_IN_TEMPDB = ON,
+              STATISTICS_NORECOMPUTE = ON);
+
+---------------------------
+--Reorganisa
+ALTER INDEX ALL ON salidas
+REORGANIZE 
+
+
+GO
+--Cuales son los indices
+
+USE MASTER 
+SELECT *
+FROM sys.dm_db_index_physical_stats (DB_ID(N'Solise'), 
+OBJECT_ID(N'null'), NULL, NULL , null)
+
+
+USE MASTER 
+SELECT avg_fragmentation_in_percent, fragment_count,avg_fragment_size_in_pages 
+FROM sys.dm_db_index_physical_stats (DB_ID(N'Solise'), 
+OBJECT_ID(N'salidas'), NULL, NULL , null)
+
+
+---genera todas las los idxs de las tablas
+---idx reset 
+SELECT 'ALTER INDEX ALL ON ' +name+ +CHAR(13)+' REBUILD WITH (FILLFACTOR = 90, SORT_IN_TEMPDB = ON,
+              STATISTICS_NORECOMPUTE = ON);'
+FROM sysobjects
+WHERE objectproperty(id, 'isusertable') = 1
+  AND name != 'dtproperties'
+  AND NOT (name like ('TMP%'))
+ORDER BY name
+
+----
+
+
+--Reorganisa
+SELECT 'ALTER INDEX ALL ON ' +name+ +CHAR(13)+'REORGANIZE '
+FROM sysobjects
+WHERE objectproperty(id, 'isusertable') = 1
+  AND name != 'dtproperties'
+  AND NOT (name like ('TMP%'))
+ORDER BY name

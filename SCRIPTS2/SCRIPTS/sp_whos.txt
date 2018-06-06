@@ -1,0 +1,35 @@
+/*several ways to do a quick search
+By Carlos Elizondo*/
+
+select 
+spid, Blocked,'Dbid: '+cast (dbid as varchar (20))+' - '+DB_NAME(dbid) as DBName, 'Dbcc Inputbuffer ('+Ltrim(str( spid, 5 )  )+')' as Input_Spid,   
+'Kill  '+Ltrim(str( spid, 5 )  )+' ' as [kill_Spid] , open_tran, ltrim(rtrim(hostname))hostname ,    ltrim(rtrim(Program_name))Program_name,ltrim(rtrim(cmd))cmd, ltrim(rtrim(loginame))loginame , login_time, last_batch      
+from sys.sysprocesses
+--where loginame like '%%'
+--where  Hostname like '%%'
+--Where db_name like '%%'
+--where program_name like '%%'
+--where cmd like '%%'
+
+
+
+
+
+
+
+DECLARE @sqltext VARBINARY(128)
+ SELECT @sqltext = sql_handle
+ FROM sys.sysprocesses
+ WHERE spid = 61
+ SELECT TEXT
+ FROM sys.dm_exec_sql_text(@sqltext)
+ GO
+
+
+DECLARE @sqltext VARBINARY(128)
+ SELECT @sqltext = sql_handle
+ FROM sys.sysprocesses
+ WHERE spid = 61
+ SELECT TEXT
+ FROM ::fn_get_sql(@sqltext)
+ GO 

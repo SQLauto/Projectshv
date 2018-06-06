@@ -1,0 +1,31 @@
+select objtype, 
+count(*) as number_of_plans, 
+Round(sum(cast(size_in_bytes as float))/1024/1024 ,2)as size_in_MBs, 
+Round (((sum(cast(size_in_bytes as float))/1024/1024) *0.000976562), 2 )as size_in_GBs, 
+
+avg(usecounts) as avg_use_count 
+from sys.dm_exec_cached_plans 
+group by objtype
+---
+
+
+select 
+count(*) as number_of_plans, 
+Round(sum(cast(size_in_bytes as float))/1024/1024 ,2)as size_in_MBs, 
+Round (((sum(cast(size_in_bytes as float))/1024/1024) *0.000976562), 2 )as size_in_GBs
+from sys.dm_exec_cached_plans 
+
+
+
+
+
+
+
+/**** Adhoc *****************/
+
+DBCC FREESYSTEMCACHE('SQL Plans')
+/**************************************/
+
+DBCC DROPCLEANBUFFERS
+DBCC FREEPROCCACHE
+DBCC FREESYSTEMCACHE('ALL')

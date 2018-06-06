@@ -1,0 +1,14 @@
+SELECT r.percent_complete, r.estimated_completion_time/1000.0/60.0/60.0, ss.*, ss.spid, ss.status, ss.program_name, ss.cmd, ss.loginame, ss.lastwaittype, sd.name,r.sql_handle, QP.query_plan,
+st.text as 'ActiveStatement', 
+(SELECT SUBSTRING(text, r.statement_start_offset/2, 
+(CASE WHEN r.statement_end_offset = -1 
+THEN LEN(CONVERT(nvarchar(max),text)) * 2 
+ELSE r.statement_end_offset 
+END - r.statement_start_offset)/2) 
+FROM sys.dm_exec_sql_text(r.sql_handle)) AS 'ActiveBatch' 
+from master.sys.sysprocesses ss
+INNER JOIN master.sys.databases sd ON ss.dbid=sd.database_id
+INNER JOIN master.sys.dm_exec_requests r ON ss.spid = r.session_id
+CROSS APPLY master.sys.dm_exec_query_plan(r.plan_handle) AS QP
+CROSS APPLY master.sys.dm_exec_sql_text(r.sql_handle) as st 
+where ss.spid!=@@spid

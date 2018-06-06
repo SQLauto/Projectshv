@@ -1,0 +1,6 @@
+--SET MAXDOP back to 4
+EXEC sys.sp_configure N'max degree of parallelism', N'4'
+GO
+RECONFIGURE WITH OVERRIDE
+GO
+

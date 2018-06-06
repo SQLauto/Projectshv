@@ -1,0 +1,49 @@
+-- Restore from full backup note the NORECOVERY hint
+	RESTORE DATABASE UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_db_201110122308.BAK'
+	WITH REPLACE,NORECOVERY, STATS = 10
+	go
+
+-- Restores from log backups als note the NORECOVERY hint
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130100.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130200.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130300.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130400.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130500.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130600.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130700.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130800.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110130900.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131000.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131100.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131200.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131300.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131400.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131500.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131600.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131700.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131800.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110131900.TRN' WITH NORECOVERY
+	go
+	RESTORE LOG UnattendedInstalls FROM DISK ='G:\Temp\Program Files\Microsoft SQL Server\MSSQL\BACKUP\UnattendedInstalls\UnattendedInstalls_tlog_201110132000.TRN' WITH NORECOVERY
+	go
+	
+-- Final restore with RECOVERY
+	RESTORE DATABASE UnattendedInstalls with RECOVERY

@@ -1,0 +1,4 @@
+dbcc checkdb ('HH_Test') with no_infomsgs
+or
+
+dbcc checkdb ('HH_Test') 

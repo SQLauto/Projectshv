@@ -1,0 +1,13 @@
+
+
+SELECT DISTINCT 'EXEC sp_who2 '+CONVERT(VARCHAR, spid) , 'DBCC INPUTBUFFER('+CONVERT(VARCHAR, spid)+')'
+--, 'EXEC sp_lock '+CONVERT(VARCHAR, spid)
+--,spid, blocked, waittype, waittime, lastwaittype, waitresource
+FROM master.dbo.sysprocesses AS P
+WHERE spid > 50 AND (blocked = 0 or spid = blocked)
+AND EXISTS(
+SELECT 1 
+FROM master.dbo.sysprocesses AS CorrP
+WHERE P.spid = CorrP.blocked AND P.spid <> P.blocked
+)
+

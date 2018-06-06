@@ -1,0 +1,30 @@
+
+			declare @PageSize float 
+			select @PageSize=v.low/1024.0 from master.dbo.spt_values v where v.number=1 and v.type='E'
+		
+
+
+SELECT
+tbl.name AS [Name],
+stbl.name AS [Schema],
+CAST(idx.rowcnt AS bigint) AS [RowCount],
+tbl.id AS [ID],
+@PageSize*((SELECT sum(sidx.dpages)
+		 FROM dbo.sysindexes sidx
+		 WHERE sidx.indid < 2 and sidx.id = tbl.id)
+		+
+		(SELECT isnull(sum(sidx.used), 0)
+		 FROM dbo.sysindexes sidx
+		 WHERE sidx.indid = 255 and sidx.id = tbl.id)) AS [DataSpaceUsed],
+@PageSize*(SELECT sum(isnull(sidx.used,0)-isnull(sidx.dpages,0))
+		 FROM dbo.sysindexes sidx
+		 WHERE sidx.indid < 2 and sidx.id = tbl.id) AS [IndexSpaceUsed]
+FROM
+dbo.sysobjects AS tbl
+INNER JOIN sysusers AS stbl ON stbl.uid = tbl.uid
+INNER JOIN dbo.sysindexes AS idx ON idx.id = tbl.id and idx.indid < 2
+WHERE
+((tbl.type='U' or tbl.type='S'))and(CAST(
+                CASE WHEN (OBJECTPROPERTY(tbl.id, N'IsMSShipped')=1) THEN 1 WHEN 1 = OBJECTPROPERTY(tbl.id, N'IsSystemTable') THEN 1 ELSE 0 END
+             AS bit)<>1)
+order by [RowCount] desc

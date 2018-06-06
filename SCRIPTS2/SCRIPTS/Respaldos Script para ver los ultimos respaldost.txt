@@ -1,0 +1,65 @@
+IF (object_id('tempdb..#BU_full') is not null)
+   drop table #BU_full
+
+Select m.type, d.name as dbName,  b.backup_start_date, b.backup_finish_date, DateDiff(s, b.backup_start_date, b.backup_finish_date) as Duration, b.name buName, b.description,
+f.physical_device_name, b.backup_size/1024.0/1024.0 as backup_size_MB, b.user_name
+into #BU_full
+from master.dbo.sysdatabases d
+left join (
+	Select type, database_name, Max(backup_set_id) backup_set_id
+	from msdb.dbo.backupset 
+	---where type='D' ---and description like 'TDP%'
+	Group by type, database_name
+	) m on m.database_name = d.name
+left join msdb.dbo.backupset b On b.backup_set_id = m.backup_set_id
+left join msdb.dbo.backupmediaset ms on ms.media_set_id = b.media_set_id
+Left join msdb..backupmediafamily f on f.media_set_id = ms.media_set_id 
+--order by b.backup_start_date desc
+order by d.name asc
+
+Select (sum(Duration)/60.0)/60 Horas from #BU_full
+
+
+Select * from #BU_full
+
+
+/////////////////////
+corregido y aumentado
+
+
+
+
+IF (object_id('tempdb..#BU_full') is not null)
+   drop table #BU_full
+
+Select m.type, d.name as dbName,  b.backup_start_date, b.backup_finish_date, DateDiff(s, b.backup_start_date, b.backup_finish_date) as Duration, b.name buName, b.description,
+f.physical_device_name, b.backup_size/1024.0/1024.0 as backup_size_MB, b.user_name
+into #BU_full
+from master.dbo.sysdatabases d
+left join (
+	Select type, database_name, Max(backup_set_id) backup_set_id
+	from msdb.dbo.backupset 
+	---where type='D' ---and description like 'TDP%'
+	Group by type, database_name
+	) m on m.database_name = d.name
+left join msdb.dbo.backupset b On b.backup_set_id = m.backup_set_id
+left join msdb.dbo.backupmediaset ms on ms.media_set_id = b.media_set_id
+Left join msdb..backupmediafamily f on f.media_set_id = ms.media_set_id 
+--order by b.backup_start_date desc
+order by d.name asc
+
+Select (sum(Duration)/60.0)/60 Horas from #BU_full
+
+
+Select * from #BU_full
+
+
+
+Select top 200 b.type, d.name, datepart(dw,backup_start_date) DiaSemana, backup_start_date, backup_finish_date, DateDiff(mi,backup_start_date,backup_finish_date)/60.0 as Duration,
+b.name, b.description, f.physical_device_name, b.backup_size/1024.0/1024.0 as backup_size_MB, b.user_name
+from master.dbo.sysdatabases d
+left join msdb.dbo.backupset b On b.database_name = d.name
+left join msdb.dbo.backupmediaset ms on ms.media_set_id = b.media_set_id
+Left join msdb.dbo.backupmediafamily f on f.media_set_id = ms.media_set_id 
+where /*b.type = 'D' and*/ d.name = db_name()
+order by backup_set_id desc

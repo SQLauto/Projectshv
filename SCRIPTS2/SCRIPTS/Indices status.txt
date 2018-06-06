@@ -1,0 +1,38 @@
+http://www.mssqltips.com/sqlservertip/1708/index-fragmentation-report-in-sql-server-2005-and-2008/
+
+
+
+Input Parameter	Description
+database_id	The default is 0 (NULL, 0, and DEFAULT are equivalent values in this context) which specify to return information for all databases in the instance of SQL Server else specify the databaseID from sys.databases if you want information about a specific database. If you specify NULL for database_id, you must also specify NULL for object_id, index_id, and partition_number. 
+object_id	The default is 0 (NULL, 0, and DEFAULT are equivalent values in this context) which specify to return information for all tables and views in the specified database or else you can specify object_id for a particular object. If you specify NULL for object_id, you must also specify NULL for index_id and partition_number.
+index_id	The default is -1 (NULL, -1, and DEFAULT are equivalent values in this context) which specify to return information for all indexes for a base table or view. If you specify NULL for index_id, you must also specify NULL for partition_number.
+partition_number	The default is 0 (NULL, 0, and DEFAULT are equivalent values in this context) which specify to return information for all partitions of the owning object. partition_number is 1-based. A nonpartitioned index or heap has partition_number set to 1.
+
+
+mode 	mode specifies the scan level that is used to obtain statistics. Valid inputs are DEFAULT, NULL, LIMITED, SAMPLED, or DETAILED. The default (NULL) is LIMITED. 
+
+•	LIMITED - It is the fastest mode and scans the smallest number of pages. For an index, only the parent-level pages of the B-tree (that is, the pages above the leaf level) are scanned. In SQL Server 2008, only the associated PFS and IAM pages of a heap are examined; the data pages of the heap are not scanned. In SQL Server 2005, all pages of a heap are scanned in LIMITED mode. 
+•	SAMPLED - It returns statistics based on a 1 percent sample of all the pages in the index or heap. If the index or heap has fewer than 10,000 pages, DETAILED mode is used instead of SAMPLED. 
+•	DETAILED - It scans all pages and returns all statistics. 
+
+--To Find out fragmentation level of a given database
+--This query will give DETAILED information
+--CAUTION : It may take very long time, depending on the number of tables in the DB
+USE VIM_VCDB
+GO
+SELECT object_name(IPS.object_id) AS [TableName], 
+   SI.name AS [IndexName], 
+   IPS.Index_type_desc, 
+   IPS.avg_fragmentation_in_percent, 
+   IPS.avg_fragment_size_in_pages, 
+   IPS.avg_page_space_used_in_percent, 
+   IPS.record_count, 
+   IPS.ghost_record_count,
+   IPS.fragment_count, 
+   IPS.avg_fragment_size_in_pages
+FROM sys.dm_db_index_physical_stats(db_id(N'VIM_VCDB'), NULL, NULL, NULL , 'LIMITED') IPS
+   JOIN sys.tables ST WITH (nolock) ON IPS.object_id = ST.object_id
+   JOIN sys.indexes SI WITH (nolock) ON IPS.object_id = SI.object_id AND IPS.index_id = SI.index_id
+WHERE ST.is_ms_shipped = 0
+ORDER BY 1,5
+GO

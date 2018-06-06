@@ -1,0 +1,29 @@
+
+declare 
+@strFind varchar (100), 
+@varDBName varchar (100)  
+
+set @strFind='As400'
+set @varDBName='solise'
+
+
+
+declare @varQuery varchar (1000) 
+
+select @varQuery = 
+
+'SELECT distinct ' + 
+
+'name SP_Name, ''sp_helptext '''''' + name + ''''''''SP_HT ' + 
+
+'FROM [' + @varDBName + '].[dbo].[sysobjects] inner join [' + @varDBName + '].[dbo].[syscomments] ' + 
+
+'on [' + @varDBName + '].[dbo].[sysobjects].id = [' + @varDBName + '].[dbo].[syscomments].id ' + 
+
+'where xtype = ''P'' ' + 
+
+'and text like ''%' + @strFind + '%'' ' + 
+
+'order by name ' 
+
+exec (@varQuery) 

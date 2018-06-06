@@ -1,0 +1,34 @@
+USE [master]
+GO
+CREATE LOGIN [nimbus] WITH PASSWORD=N'********', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
+GO
+
+
+exec sp_msforeachdb 'USE [?];
+CREATE USER [nimbus] FOR LOGIN [nimbus] WITH DEFAULT_SCHEMA=[dbo];
+GRANT SELECT ON [dbo].[sysfiles] TO [nimbus];
+GRANT SELECT ON [dbo].[sysindexes] TO [nimbus];
+GRANT SELECT ON [dbo].[sysobjects] TO [nimbus];
+'
+
+
+use [master]
+GO
+GRANT SELECT ON [dbo].[sysprocesses] TO [nimbus]
+GO
+use [master]
+GO
+GRANT SELECT ON [dbo].[spt_values] TO [nimbus]
+GO
+use [master]
+GO
+GRANT SELECT ON [dbo].[sysperfinfo] TO [nimbus]
+GO
+use [master]
+GO
+GRANT SELECT ON [dbo].[syscurconfigs] TO [nimbus]
+GO
+use [master]
+GO
+GRANT SELECT ON [dbo].[sysdatabases] TO [nimbus]
+GO

@@ -1,0 +1,115 @@
+
+
+exec sp_msforeachdb 'USE [?]; 
+
+SELECT * FROM sys.sql_modules
+where definition like ''%FROM sys.dm_exec_requests%''
+' 
+
+
+Select * from msdb.dbo.sysjobsteps
+where Command like '%FROM sys.dm_exec_requests%'
+
+
+
+
+
+
+
+
+Select B.name as Job_Name,
+CASE  b.enabled
+         WHEN 1 THEN 'Started'
+         WHEN 0 THEN 'Turned Off'
+         ELSE ''
+      END Status ,
+	  
+	 
+
+'USE MSDB;
+GO
+UPDATE MSDB.dbo.sysjobs
+SET Enabled = 0
+WHERE [Name] LIKE '''+B.name+''';
+GO' as Disable_Job  ,
+	  
+	  
+	  a.* 
+	from msdb.dbo.sysjobsteps A
+	Left Join  msdb.dbo.sysjobs B
+On A.job_id=B.Job_id
+where A.command like '%RS_EPM%'
+And A.command like '%log%'
+
+
+
+
+
+
+-*-*-*-*-*-*-*
+
+
+
+IF OBJECT_ID('tempdb..#temp') IS NOT NULL  DROP TABLE #temp
+IF OBJECT_ID('tempdb..#Jobs') IS NOT NULL  DROP TABLE #Jobs
+
+cREATE TABLE  #TEMP 
+(
+schedule_id int  Null,  
+schedule_nam varchar(5000) Null, 
+enabled int Null,
+freq_type int Null, 
+freq_interval int Null, 
+freq_subday_type int Null, 
+freq_subday_interval int Null, 
+freq_relative_interval int Null, 
+freq_recurrence_factor int Null, 
+active_start_date int Null, 
+active_end_date int Null,
+active_start_time int Null,
+active_end_time int Null, 
+date_created  datetime Null,
+schedule_description nvarchar(4000) Null,
+next_run_date  int Null,
+next_run_time int Null,
+schedule_uid  varchar (5000) Null,
+job_count varchar(5000) Null, 
+)
+
+
+
+
+
+Use msdb
+go
+Select 'insert into #temp 
+exec sp_help_jobschedule @job_name ='''+nAME+''', @include_description = 1'  aS SCRIPT from msdb.dbo.sysjobs 
+where name like '%DBA%'
+go
+
+insert into #temp 
+exec sp_help_jobschedule @job_name ='DBA_IndexOptimize', @include_description = 1
+insert into #temp 
+exec sp_help_jobschedule @job_name ='DBA_IntegrityCheck', @include_description = 1
+
+
+
+/*
+Inserts
+insert into #temp 
+exec sp_help_jobschedule @job_name ='Full Database Backup - Hypernion DBs', @include_description = 1
+insert into #temp
+exec sp_help_jobschedule @job_name ='MAIL_Warning Reports', @include_description = 1
+*/
+
+
+----
+Select A.schedule_id , A.schedule_description , B.Job_id
+Into #Jobs 
+from #TEMP a
+Left Join sysjobschedules b On b.schedule_id =a.schedule_id 
+
+
+select B.name,B.job_id,a.schedule_description from #Jobs a 
+right join sysjobs b On a.job_id=b.job_id  --all
+--Left join sysjobs b On a.job_id=b.job_id--Only schedules

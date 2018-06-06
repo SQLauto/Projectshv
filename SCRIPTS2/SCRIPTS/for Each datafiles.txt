@@ -1,0 +1,36 @@
+/*for each */
+
+
+USe tempdb 
+go
+CREATE TABLE dbo.#Table_CHeckdatafiles
+	(
+	Date_taken datetime null,
+	Server Varchar(500) null ,  
+Db_bame Varchar(500) null , 
+file_id int null,
+ Type_Desc Varchar(500) null, 
+ name Varchar(500) null, 
+ physical_name Varchar(500) null, 
+size int null, 
+max_size int null,
+ growth int null , 
+ is_percent_growth int null 
+	)  ON [PRIMARY]
+GO
+
+
+
+
+exec sp_msForeachdb 'use [?];
+ insert into tempdb.[dbo].[#Table_CHeckdatafiles]
+select Getdate() as Date_taken, @@SERVERNAME as Server, db_name() Db_Name , file_id, Type_Desc, name, physical_name, 
+size, max_size, growth, is_percent_growth from sys.database_files
+Where Max_size <> ''-1'' 
+and  Max_size <268435456 
+And DB_Name() not in (''Master'', ''Msdb'' , ''tempdb'') 
+'
+
+
+select * from tempdb.[dbo].[#Table_CHeckdatafiles]
+drop table tempdb.[dbo].[#Table_CHeckdatafiles]

@@ -1,0 +1,70 @@
+
+/*
+-- La nueva sintaxis del LiteSpeed usa comillas simples en lugar de dobles
+
+
+SELECT 
+	',@with = ''MOVE ''''' +
+	name
+	+ '''''	TO ''''O:\'+
+	physical_name
+	+ ''''''''
+
+FROM sys.database_files f with (nolock)
+order by physical_name
+
+
+*/
+/*
+EXEC master.dbo.xp_restore_database   
+    
+    @database = 'SDW_Repository',
+    
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_01.BKP',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_02.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_03.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_04.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_05.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_06.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_07.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_08.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_09.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_10.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_11.bkp',
+	@filename = 'K:\MP1\MSSQL\Backup\Full\Siebel\Siebel_SQLLite_FullDBBackup_12.bkp',
+	
+
+
+	--- Move DATA Files
+	
+	@with = 'MOVE "SiebelSystem"	TO "N:\MSSQL\Data\Siebel.mdf"',
+	@with = 'MOVE "SiebelACTData1"	TO "N:\mssql\data\SiebelACTData1.NDF"',
+	@with = 'MOVE "SiebelActData2"	TO "N:\mssql\data\SiebelACTData2.NDF"',
+	@with = 'MOVE "SiebelACTIndex1" TO "N:\mssql\data\SiebelACTIndex1.NDF"',
+	@with = 'MOVE "SiebelActIndex2" TO "N:\mssql\data\SiebelACTIndex2.NDF"',
+	@with = 'MOVE "SiebelData1"		TO "O:\MSSQL\Data\SiebelData1.ndf"',
+	@with = 'MOVE "SiebelData2"		TO "O:\mssql\data\SiebelData2.ndf"',
+	@with = 'MOVE "SiebelData3"		TO "P:\mssql\data\SiebelData3.ndf"',
+	@with = 'MOVE "SiebelData4"		TO "P:\mssql\data\SiebelData4.ndf"',
+	@with = 'MOVE "SiebelEIMData1"	TO "S:\mssql\data\SiebelEIMData1.NDF"',
+	@with = 'MOVE "SiebelEIMData2"	TO "S:\mssql\data\SiebelEIMData2.NDF"',
+	@with = 'MOVE "SiebelEIMIndex1" TO "S:\mssql\data\SiebelEIMIndex1.NDF"',
+	@with = 'MOVE "SiebelEIMIndex2" TO "S:\mssql\data\SiebelEIMIndex2.NDF"',
+	@with = 'MOVE "SiebelIndex1"	TO "S:\mssql\data\SiebelIndex1.ndf"',
+	@with = 'MOVE "SiebelIndex2"	TO "S:\mssql\data\SiebelIndex2.ndf"',
+	@with = 'MOVE "SiebelIndex3"	TO "T:\mssql\data\SiebelIndex3.ndf"',
+	@with = 'MOVE "SiebelIndex4"	TO "T:\mssql\data\SiebelIndex4.ndf"',
+	@with = 'MOVE "SiebelLog1"		TO "T:\mssql\logs\SiebelLog1.ldf"',
+
+
+	-- Query to get all the files from a database with the format for "WITH MOVE"
+	-- select '@with = ''MOVE "' + name + '" TO "' + filename + '"'',' from sysfiles with (nolock)
+	
+
+
+	-- Modificadores
+
+	@with= 'replace'
+	--@with= 'norecovery'
+	
+*/

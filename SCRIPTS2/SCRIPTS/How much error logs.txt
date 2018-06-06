@@ -1,0 +1,9 @@
+/*To find how many error logs we will save
+By Carlos Elizondo*/
+
+declare @NumErrorLogs int 
+exec master.dbo.xp_instance_regread N'HKEY_LOCAL_MACHINE', 
+N'Software\Microsoft\MSSQLServer\MSSQLServer', 
+N'NumErrorLogs', 
+@NumErrorLogs OUTPUT 
+SELECT @NumErrorLogs

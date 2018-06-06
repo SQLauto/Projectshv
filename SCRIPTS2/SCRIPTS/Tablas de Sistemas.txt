@@ -1,0 +1,10 @@
+•	dm_exec_query_stats – performance stats of all queries 
+•	dm_exec_sql_text – returns exact sql for entire batch given a sql handle 
+•	dm_exec_query_plan – return query plan for entire batch given a plan handle 
+•	dm_db_index_usage_stats – displays how often each index is used, show Read Seeks, Read Scans, Write Seeks and Write Scans 
+•	dm_db_index_physical_stats – replace DBCC SHOWCONTIG used to check index fragmentation 
+•	dm_db_index_operational_stats – use to check for index contention and blocking 
+•	dm_os_wait_stats – Used to determine the types of waits (signal or resource that are occurring) 
+•	dm_os_waiting_tasks – Used to help identify blocking 
+•	dm_tran_locks – Used to help indentify blocking 
+•	dm_os_performance_counters – Query Access to SQL Server Performance counters

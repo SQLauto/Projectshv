@@ -1,0 +1,25 @@
+[1/20/2015 5:41 PM] Vaquera, Hugo: 
+3.-Crear el ENDPOINT con el puerto que no esta en uso
+[1/20/2015 5:41 PM] Vaquera, Hugo: 
+4
+[1/20/2015 5:41 PM] Vaquera, Hugo: 
+Abrir el puerto que elegimos con el comando que me pasaste
+[1/20/2015 5:42 PM] Vaquera, Hugo: 
+5.-Habilitar el TCPIP y habilitar la primera opcion de la segunda hoja, que es la que elige un puerto para ese PID, y le asignas cualquier otro puerto que este vacio
+[1/20/2015 5:42 PM] Vaquera, Hugo: 
+6.-Probar desde el primario la conexion con el telnet IP PUERTO y deberia responder, si no responde hay que buscar otro puerto
+This conversation is being saved in your Outlook Inbox folder.
+[1/20/2015 5:42 PM] Vaquera, Hugo: 
+7.-Ya cuando respondio el puerto, hay que reiniciar los servicios para qeu tomen todos los cambios que hicimos
+[1/20/2015 5:43 PM] Vaquera, Hugo: 
+8.-Agregar las cuentas de servicio de SQL y AGENT en el primario y secundario con permisos de sysadmin 
+[1/20/2015 5:43 PM] Vaquera, Hugo: 
+9.-Darle permisos de connect en el endpoint en los dos server a las 2 cuentas
+[1/20/2015 5:43 PM] Vaquera, Hugo: 
+10.-Ahora si hacer el mirror y funciona a la perfeccion
+[1/20/2015 5:43 PM] Vaquera, Hugo: 
+jajajaja
+[1/20/2015 5:44 PM] Vaquera, Hugo: 
+son 10 pasos, larguisimos jajaja todavia batalle en el HMS por que no supe como hice los pasos en el RP pero ya los deshice y los volvi a hacer con todo y puerto y asi fue el flujo para que jale, me brinque pasos y no jalaban, entonces asi es la recetita
+[1/20/2015 5:44 PM] Vaquera, Hugo: 
+jajaja

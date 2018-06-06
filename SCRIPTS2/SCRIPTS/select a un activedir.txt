@@ -1,0 +1,8 @@
+SELECT * FROM OpenQuery ( 
+  ADSIRR,  
+'SELECT givenname, sn, displayName, mail 
+FROM ''LDAP://DC=corp,DC=bankofamerica,DC=com'' 
+WHERE objectClass = ''user'' AND sAMAccountName = ''nbkyeyw'' 
+  ') AS tblADSI 
+ORDER BY displayname
+sAMAccountName es la cuanta a la que vas a revisar los detalles

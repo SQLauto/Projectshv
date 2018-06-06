@@ -1,0 +1,26 @@
+--      DROP TABLE who2;
+
+      CREATE TABLE who2 (
+            --couter int not null, 
+            SPID INT,
+            Status VARCHAR(MAX),
+            Login  VARCHAR(MAX),
+            HostName  VARCHAR(MAX),
+            BlkBy VARCHAR(MAX),
+            DBName VARCHAR(MAX),
+            Command VARCHAR(MAX),
+            CPUTime REAL,
+            DiskIO REAL,
+            LastBatch VARCHAR(MAX),
+            ProgramName  VARCHAR(MAX),
+            SPID2 INT,
+            REQUESTID INT)
+
+
+
+
+      INSERT who2
+      EXEC sp_who2
+
+      SELECT * FROM who2
+		where SPID>50

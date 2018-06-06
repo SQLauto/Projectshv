@@ -1,0 +1,26 @@
+
+SET IDENTITY_INSERT dbo.Temp_requests_01 ON            
+GO
+
+INSERT INTO [dbo].[Temp_requests_01]
+           ([RequestNumber],	[DATEREQUESTED]      ,[EmpName]           ,[Department]           ,[VasLblDate]           ,[EffortRequested]
+           ,[Missing]           ,[Located]           ,[Dissassociated]           ,[PONumber]          ,[IBS]           ,[Vendor]
+           ,[CaseOne]           ,[CaseTwo]           ,[CaseThree]           ,[Trip]           ,[ReqDescription]           ,[ZID]
+           ,[Status]           ,[Comments]         [Carrier]           ,[Remarksby]           ,[CompDT]           ,[CaseCount]
+           ,[WhoDis]           ,[StoreNumber]      ,[Reason]           ,[NewIS]           ,[NewCSN]           ,[DCN]
+           ,[MoreComments]     ,[AreaID]           ,[Verified]           ,[VerifiedID])
+
+
+SELECT [RequestNumber]      ,[DATEREQUESTED]      ,[EmpName]      ,[Department]     ,[VasLblDate]
+      ,[EffortRequested]      ,[Missing]      ,[Located]      ,[Dissassociated]      ,[PONumber]      ,[IBS]
+      ,[Vendor]      ,[CaseOne]      ,[CaseTwo]      ,[CaseThree]      ,[Trip]      ,[ReqDescription]
+      ,[ZID]      ,[Status]      ,[Comments]      ,[Carrier]      ,[Remarksby]      ,[CompDT]
+      ,[CaseCount]      ,[WhoDis]      ,[StoreNumber]      ,[Reason]      ,[NewIS]      ,[NewCSN]
+      ,[DCN]      ,[MoreComments]      ,[AreaID]      ,[Verified]      ,[VerifiedID]
+	  	    FROM [dbo].[requests]
+GO
+
+
+
+
+       SET IDENTITY_INSERT dbo.Temp_requests_01 OFF

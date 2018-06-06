@@ -1,0 +1,149 @@
+/*
+If  sp_configure N'Ole Automation Procedures' is =1... 
+Then run 
+EXEC sys.sp_configure N'Ole Automation Procedures' , N'1' 
+
+RECONFIGURE WITH OVERRIDE
+*/
+
+SET NOCOUNT ON
+DECLARE @hr int
+DECLARE @fso int
+DECLARE @drive char(1)
+DECLARE @odrive int
+DECLARE @TotalSize varchar(20) DECLARE @MB Numeric ; SET @MB = 1048576
+CREATE TABLE #drives (drive char(1) PRIMARY KEY, FreeSpace float NULL,
+TotalSize float NULL) INSERT #drives(drive,FreeSpace) EXEC
+master.dbo.xp_fixeddrives EXEC @hr=sp_OACreate
+'Scripting.FileSystemObject',@fso OUT IF @hr <> 0 EXEC sp_OAGetErrorInfo
+@fso
+DECLARE dcur CURSOR LOCAL FAST_FORWARD
+FOR SELECT drive from #drives ORDER by drive
+OPEN dcur FETCH NEXT FROM dcur INTO @drive
+WHILE @@FETCH_STATUS=0
+BEGIN
+EXEC @hr = sp_OAMethod @fso,'GetDrive', @odrive OUT, @drive
+IF @hr <> 0 EXEC sp_OAGetErrorInfo @fso EXEC @hr =
+sp_OAGetProperty
+@odrive,'TotalSize', @TotalSize OUT IF @hr <> 0 EXEC sp_OAGetErrorInfo
+@odrive UPDATE #drives SET TotalSize=@TotalSize/@MB WHERE
+drive=@drive FETCH NEXT FROM dcur INTO @drive
+End
+Close dcur
+DEALLOCATE dcur
+EXEC @hr=sp_OADestroy @fso IF @hr <> 0 EXEC sp_OAGetErrorInfo @fso
+
+SELECT
+Drive, 
+Round(TotalSize/1024,2) as 'Total(GB)', 
+Round (((TotalSize*8 )/1024 )*0.000976,2)  as 'Total (TB)',
+round(FreeSpace /1024,2) as 'Free(GB)', 
+Round (((FreeSpace*8 )/1024 )*0.000976,2)  as 'Free (TB)',
+CONVERT( varchar(10) , Round(((100/TotalSize)*FreeSpace ),2))+' %' as [Free],
+CONVERT( VArchar (10), Round((100-(100/TotalSize)*FreeSpace ),2))+' %'as [Taken]
+
+
+ 
+ FROM #drives
+
+ORDER BY drive 
+DROP TABLE #drives 
+GO 
+
+
+
+-----------------------------------
+
+
+	
+	/*
+If  sp_configure N'Ole Automation Procedures' is =1... 
+Then run 
+EXEC sys.sp_configure N'Ole Automation Procedures' , N'1' 
+
+RECONFIGURE WITH OVERRIDE
+*/
+if exists(Select * from tempdb.dbo.sysobjects where id = object_id(N'tempdb.dbo.#drives ') )
+drop table #drives
+
+SET NOCOUNT ON
+DECLARE @hr int
+DECLARE @fso int
+DECLARE @drive char(1)
+DECLARE @odrive int
+DECLARE @TotalSize varchar(20) DECLARE @MB Numeric ; SET @MB = 1048576
+CREATE TABLE #drives (drive char(1) PRIMARY KEY, FreeSpace float NULL,
+TotalSize float NULL) INSERT #drives(drive,FreeSpace) EXEC
+master.dbo.xp_fixeddrives EXEC @hr=sp_OACreate
+'Scripting.FileSystemObject',@fso OUT IF @hr <> 0 EXEC sp_OAGetErrorInfo
+@fso
+DECLARE dcur CURSOR LOCAL FAST_FORWARD
+FOR SELECT drive from #drives ORDER by drive
+OPEN dcur FETCH NEXT FROM dcur INTO @drive
+WHILE @@FETCH_STATUS=0
+BEGIN
+EXEC @hr = sp_OAMethod @fso,'GetDrive', @odrive OUT, @drive
+IF @hr <> 0 EXEC sp_OAGetErrorInfo @fso EXEC @hr =
+sp_OAGetProperty
+@odrive,'TotalSize', @TotalSize OUT IF @hr <> 0 EXEC sp_OAGetErrorInfo
+@odrive UPDATE #drives SET TotalSize=@TotalSize/@MB WHERE
+drive=@drive FETCH NEXT FROM dcur INTO @drive
+End
+Close dcur
+DEALLOCATE dcur
+EXEC @hr=sp_OADestroy @fso IF @hr <> 0 EXEC sp_OAGetErrorInfo @fso
+
+
+
+
+
+
+--update #drives
+--set FreeSpace=2331204
+--where drive='D'
+
+
+
+
+--select * from #drives
+
+
+
+SELECT
+Drive, 
+Round(TotalSize/1024,2) as 'Total(GB)', 
+Round (((TotalSize*8 )/1024 )*0.000976,2)  as 'Total (TB)',
+Round(FreeSpace /1024,2) as 'Free(GB)', 
+Round (((FreeSpace*8 )/1024 )*0.000976,2)  as 'Free (TB)',
+CONVERT( varchar(10) , Round(((100/TotalSize)*FreeSpace ),2))+' %' as 'Free',
+CONVERT( VArchar (10), Round((100-(100/TotalSize)*FreeSpace ),2))+' %'as 'Taken' ,
+
+ --CASE		WHEN Round(TotalSize/1024,2) >58  
+	--		 THEN Round(TotalSize/1024,2)
+			
+ --           WHEN  Round(TotalSize/1024,2) <58     
+ --            then Round (((TotalSize*8 )/1024 )*0.000976,2) 
+
+ --      END
+
+
+             CASE 
+                  WHEN Round(TotalSize/1024,2) >1024
+                     THEN 
+                     Convert (varchar (40) ,Round (((TotalSize*8 )/1024 )*0.000976,2)) + ' (TB)'
+                  ELSE Convert (varchar (40) ,Round(TotalSize/1024,2)) + ' (GB)'
+             END  as Total 
+,
+             CASE 
+                  WHEN Round(FreeSpace/1024,2) >1024
+                     THEN 
+                     Convert (varchar (40) ,Round (((FreeSpace*8 )/1024 )*0.000976,2)) + ' (TB)'
+                  ELSE Convert (varchar (40) ,Round(FreeSpace/1024,2)) + ' (GB)'
+             END  as Free 
+
+
+ FROM #drives
+ORDER BY drive 
+
+
+

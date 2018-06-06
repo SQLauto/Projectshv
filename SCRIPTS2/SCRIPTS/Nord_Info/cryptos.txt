@@ -1,0 +1,37 @@
+Log into keepass and look for the below file:
+
+"POS Service Accts"
+
+Look for the accounts that have being requested to be encrypted
+
+
+*-----
+
+
+Useful documentation:
+
+https://confluence.nordstrom.net/display/TDSS/How+to+Create+SQL+Service+Accounts+and+Crypto+files+for+new+PSP+builds
+https://confluence.nordstrom.net/pages/viewpage.action?pageId=61861695
+
+
+Go to D:\Util\SQLCrypto and execute the .exe program to generate the encrypted file
+
+
+-----
+
+
+
+place it in 
+
+
+PSP:
+
+\\P0393P01\e$\software\SQLServer\Install\Server\Nord
+
+
+*** Only change server name for the server they are requesting for.
+
+
+Place it in GOLDEN CODE:
+
+\\p0319p01\Staging\POS_Replatform\CryptoFiles\PRODUCTION

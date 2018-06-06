@@ -1,0 +1,12 @@
+USE [msdb]
+GO
+EXEC msdb.dbo.sp_set_sqlagent_properties @sqlserver_restart=0, 
+		@monitor_autostart=0
+GO
+USE [msdb]
+GO
+EXEC msdb.dbo.sp_set_sqlagent_properties @sqlserver_restart=0, 
+		@monitor_autostart=0, 
+		@jobhistory_max_rows=10000, 
+		@jobhistory_max_rows_per_job=1000
+GO

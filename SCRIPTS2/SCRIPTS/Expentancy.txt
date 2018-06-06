@@ -1,0 +1,13 @@
+SELECT [object_name],
+[counter_name],
+[cntr_value]
+FROM sys.dm_os_performance_counters
+WHERE [object_name] LIKE '%Manager%'
+AND [counter_name] = 'Page life expectancy'
+
+The recommended value of the PLE counter is 300 seconds. I have seen on busy system this value to be as low as even 45 seconds and on unused system as high as 1250 seconds. Page Life Expectancy is number of seconds a page will stay in the buffer pool without references. In simple words, if your page stays longer in the buffer pool (area of the memory cache) your PLE is higher, leading to higher performance as every time request comes there are chances it may find its data in the cache itself instead of going to hard drive to read the data.
+
+Now check your system and post back what is this counter value for you during various time of the day. Is this counter any way relates to performance issues for your system?
+
+ 
+

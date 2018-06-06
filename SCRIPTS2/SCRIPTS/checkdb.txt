@@ -1,0 +1,4 @@
+sp_msforeachdb 'use [?]; dbcc checkdb (''?'') with no_infomsgs'
+
+
+dbcc checkdb ('Nombre') with no_infomsgs'

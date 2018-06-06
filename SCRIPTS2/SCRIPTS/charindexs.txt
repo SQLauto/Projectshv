@@ -1,0 +1,22 @@
+/*Intresting way to do a quick search by char index
+By Carlos Elizondo*/
+
+
+DECLARE @x varchar(max) 
+SET @x = 'Minor|PRODUCTIqeqweON|dba-mssqlserver@mplttauhsh014||Warning: MSSQLServer@MPLTTAUHSH014: BOFA_DBSS - Jobs'
+SELECT 
+CHARINDEX('@', @x) as '@'
+, CHARINDEX ('|', @X, CHARINDEX('@', @x)) as '|'
+, SUBSTRING(@X, CHARINDEX('@', @x)+1, CHARINDEX ('|', @X, CHARINDEX('@', @x))-CHARINDEX('@', @x)-1)as Name
+
+---error
+
+
+DECLARE @x varchar(max) 
+SET @x = 'Minor|PRODUCTION|dba-mssqlserver@mplttbgsc001s0|Warning: MSSQLServer@MPLTTBGSC001S0: DBSS - Fixed Data File Used FMS server LLTWA00F reports: MSSQLServer@MPLTTBGSC001S0: The data file DCTP_ImageRepository_2 (N:\MSSQL\Data\DCTP_ImageRepository_2.NDF)in database DCTP_ImageRepository is 78% full.: DBSS - . dba-mssqlserver@mplttbgsc001s0;SQL_DBSS_Fixed_Data_File_Used'
+
+SELECT 
+CHARINDEX('@', @x) as '@'
+, CHARINDEX ('|', @X, CHARINDEX('@', @x)) as '|'
+, SUBSTRING(@X, CHARINDEX('@', @x)+1, CHARINDEX ('|', @X, CHARINDEX('@', @x))-CHARINDEX('@', @x)-1)as Name
+

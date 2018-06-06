@@ -1,0 +1,155 @@
+set nocount on
+/* Cuales tienen mas para probar
+BY Carlos Elizondo
+
+
+
+
+
+CREATE TABLE #temporal ( 
+    LoginName nvarchar(max), 
+    DBname nvarchar(max), 
+    Username nvarchar(max), 
+    AliasName nvarchar(max) 
+)  
+INSERT INTO #temporal 
+EXEC master..sp_msloginmappings 
+-- display results 
+
+
+SELECT loginname, count(loginname) as DB_Involved FROM   #temporal 
+group by loginname 
+order by count(loginname) desc 
+
+*/
+
+
+IF OBJECT_ID('tempdb..#temporal') IS NOT NULL  DROP TABLE #temporal  
+IF OBJECT_ID('tempdb..#output') IS NOT NULL  DROP TABLE #output  
+IF OBJECT_ID('tempdb..#Mappings') IS NOT NULL  DROP TABLE #Mappings
+
+go
+
+            DECLARE @name sysname,
+             @type varchar (1),
+             @LoginName sysname,
+             @hasaccess int,
+             @denylogin int,
+             @is_disabled int,
+             @PWD_varbinary  varbinary (256),
+             @PWD_string  varchar (514),
+             @SID_varbinary varbinary (85),
+             @SID_string varchar (514),
+             @tmpstr  varchar (1024),
+             @is_policy_checked varchar (3),
+             @is_expiration_checked varchar (3),
+			 @DatabaseName sysname,
+			 @SQL NVARCHAR(4000),
+			 @sid VARCHAR(255),
+             @defaultdb sysname,
+			 @Sizedb as Int,
+			 @Command as Varchar (8000),
+			 @Command1 as Varchar (8000),
+			 @Command3 as Varchar (3),
+			 @Command2 as Varchar (8000),			 
+			 @Initial As int,
+			 @Pass As int             
+			SET @LoginName = null--'sa'
+            Create Table #output 
+                (
+                    id int IDENTITY(1,1),
+                    cmd varchar(8000)
+                )
+
+
+            IF (@LoginName IS NULL)
+              DECLARE login_curs CURSOR FOR
+
+                  SELECT p.sid, p.name, p.type, p.is_disabled, p.default_database_name, l.hasaccess, l.denylogin FROM 
+            sys.server_principals p LEFT JOIN sys.syslogins l
+                  ON ( l.name = p.name ) WHERE p.type IN ( 'S', 'G', 'U' ) AND p.name <> 'sa'
+            ELSE
+              DECLARE login_curs CURSOR FOR
+
+
+                  SELECT p.sid, p.name, p.type, p.is_disabled, p.default_database_name, l.hasaccess, l.denylogin FROM 
+            sys.server_principals p LEFT JOIN sys.syslogins l
+                  ON ( l.name = p.name ) WHERE p.type IN ( 'S', 'G', 'U' ) AND p.name = @LoginName
+            OPEN login_curs
+
+            FETCH NEXT FROM login_curs INTO @SID_varbinary, @name, @type, @is_disabled, @defaultdb, @hasaccess, @denylogin
+            IF (@@fetch_status = -1)
+
+            SET @tmpstr = ''
+            PRINT @tmpstr
+            SET @tmpstr = ''
+            PRINT @tmpstr
+            PRINT ''
+            WHILE (@@fetch_status <> -1)
+            BEGIN
+              IF (@@fetch_status <> -2)
+              BEGIN
+  
+
+                IF (@type IN ( 'G', 'U'))
+                BEGIN -- NT authenticated account/group
+
+                  SET @tmpstr = '--CREATE LOGIN ' + QUOTENAME( @name ) + ' FROM WINDOWS WITH DEFAULT_DATABASE = [' + @defaultdb + ']'
+
+                END
+                ELSE BEGIN -- SQL Server authentication
+                    -- obtain password and sid
+                        SET @PWD_varbinary = CAST( LOGINPROPERTY( @name, 'PasswordHash' ) AS varbinary (256) )
+                    EXEC sp_hexadecimal @PWD_varbinary, @PWD_string OUT
+                    EXEC sp_hexadecimal @SID_varbinary,@SID_string OUT
+
+                    -- obtain password policy state
+                    SELECT @is_policy_checked = CASE is_policy_checked WHEN 1 THEN 'ON' WHEN 0 THEN 'OFF' ELSE NULL END FROM sys.sql_logins WHERE name = @name
+                    SELECT @is_expiration_checked = CASE is_expiration_checked WHEN 1 THEN 'ON' WHEN 0 THEN 'OFF' ELSE NULL END FROM sys.sql_logins WHERE name = @name
+
+                        SET @tmpstr = '--CREATE LOGIN ' + QUOTENAME( @name ) + ' WITH PASSWORD = ' + @PWD_string + ' HASHED, SID = ' + @SID_string + ', DEFAULT_DATABASE = [' + @defaultdb + ']'
+                    IF ( @is_policy_checked IS NOT NULL )
+                    BEGIN
+                      SET @tmpstr = @tmpstr + ', CHECK_POLICY = ' + @is_policy_checked
+                    END
+                    IF ( @is_expiration_checked IS NOT NULL )
+                    BEGIN
+                      SET @tmpstr = @tmpstr + ', CHECK_EXPIRATION = ' + @is_expiration_checked
+                    END
+                END
+                IF (@denylogin = 1)
+                BEGIN -- login is denied access
+                  SET @tmpstr = @tmpstr + '; DENY CONNECT SQL TO ' + QUOTENAME( @name )
+                END
+                ELSE IF (@hasaccess = 0)
+                BEGIN -- login exists but does not have access
+                  SET @tmpstr = @tmpstr + '; REVOKE CONNECT SQL TO ' + QUOTENAME( @name )
+                END
+                IF (@is_disabled = 1)
+                BEGIN -- login is disabled
+                  SET @tmpstr = @tmpstr + '; ALTER LOGIN ' + QUOTENAME( @name ) + ' DISABLE'
+                END
+                --PRINT @tmpstr
+                insert into  #output  (cmd) values (@tmpstr)
+              END
+
+              FETCH NEXT FROM login_curs INTO @SID_varbinary, @name, @type, @is_disabled, @defaultdb, @hasaccess, @denylogin
+               END
+            CLOSE login_curs
+            DEALLOCATE login_curs
+
+-- display results 
+
+
+
+select cmd +'go' from  #output 
+where cmd like '%reggaebcp%'
+or cmd like '%reggae_link%'
+
+
+
+--  Set @Command1=(select '/*-------HASH PASS-----'+ cmd +'*/' from  #output )
+
+----------------------Filtrer--------------------------------------------------
+
+

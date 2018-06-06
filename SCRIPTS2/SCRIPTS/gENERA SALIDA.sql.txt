@@ -1,0 +1,38 @@
+--DECLARE @FileName varchar(50),
+--        @bcpCommand varchar(2000)
+--
+--SET @FileName = REPLACE('c:\aAuthors_'+CONVERT(char(8),GETDATE(),1)+'.txt','/','-')
+--
+--SET @bcpCommand = 'bcp "SELECT * FROM [pitsqlp05\dev].DEFSDBA.dbo.Pemissions" queryout "'
+--SET @bcpCommand = @bcpCommand + @FileName + '" -T -c'
+--SELECT  @bcpCommand
+--
+----EXEC master..xp_cmdshell @bcpCommand
+--
+
+
+--Select Msj from Pemissions
+--Order by Id
+--SELECT  @bcpCommand
+
+-- DE AQUI
+Declare @dbNamedb as [Varchar](8000)
+------
+Set @dbNamedb ='DBRestoreSinLog'
+
+DECLARE @FileName varchar(8000),
+        @bcpCommand varchar(8000)
+SET @FileName = REPLACE('F:\DEVEnvironment\Permissions\Permissions_'+@dbNamedb+'_'+CONVERT(char(8),GETDATE(),1)+'.sql','/','-')
+
+
+SET @bcpCommand = 'bcp "SELECT msj FROM DEFSDBA..Pemissions ORDER BY 1" queryout "'
+SET @bcpCommand = @bcpCommand + @FileName + '" -S PITSQLP05\DEV -T -c'
+
+--print @bcpCommand 
+
+-- AQUI PA VER 
+EXEC master..xp_cmdshell @bcpCommand
+
+
+
+

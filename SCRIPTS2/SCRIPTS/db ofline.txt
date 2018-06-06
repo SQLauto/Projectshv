@@ -1,0 +1,9 @@
+ALTER DATABASE [dsa] SET  SINGLE_USER WITH ROLLBACK IMMEDIATE 
+go 
+Alter database [dsa] set offline	
+go
+
+Alter database [dsa] set online	
+go
+ALTER DATABASE [dsa] SET  Multi_USER 
+go 

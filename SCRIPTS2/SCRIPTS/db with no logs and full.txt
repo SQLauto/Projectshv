@@ -1,0 +1,19 @@
+/*Issue with a db with no logs and full*/
+
+1. Detach database and move your mdf to save location. 
+2. Create new databse of same name, same files, same file location and same file size. 
+3. Stop SQL server. 
+4. Swap mdf file of just created DB to your save one. 
+5. Start SQL. DB can go suspect. 
+6. ALTER DATABASE yourdb SET EMERGENCY 
+7. ALTER DATABASE yourdb SET SINGLE_USER 
+8. DBCC CHECKDB (yourdb, REPAIR_ALLOW_DATA_LOSS) 
+9. ALTER DATABASE yourdb SET MULTI_USER 
+10. ALTER DATABASE yourdb SET ONLINE
+
+
+
+
+
+Create Target database with new copied MDF file 
+(without transaction log using FOR ATTACH_REBUILD_LOG option) 

@@ -1,0 +1,18 @@
+DECLARE @sqlcmd VARCHAR(1000)
+DECLARE @n INT, @max INT
+
+select @max = cpu_count from sys.dm_os_sys_info
+SET @n = 2
+
+WHILE @n <= @max
+BEGIN
+	SELECT @sqlcmd = 'ALTER DATABASE [tempdb] ADD FILE ( NAME = N''tempdb_data'+CAST(@n AS VARCHAR(2))+''', FILENAME = N''G:\SQLServr\Data\tempdb_data'+CAST(@n AS VARCHAR(2))+'.ndf'' , SIZE = 524288KB , FILEGROWTH = 524288KB )'
+	SET @n = @n + 1
+	PRINT @sqlcmd
+	EXEC (@sqlcmd)
+END
+
+ALTER DATABASE [tempdb] MODIFY FILE ( NAME = N'tempdev', SIZE = 524288KB , FILEGROWTH = 524288KB )
+GO
+ALTER DATABASE [tempdb] MODIFY FILE ( NAME = N'templog', SIZE = 131072KB , FILEGROWTH = 131072KB )
+GO
